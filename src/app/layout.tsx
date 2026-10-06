@@ -1,11 +1,13 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Playfair_Display, Lato, Great_Vibes } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"] });
+const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-playfair" });
+const lato = Lato({ subsets: ["latin"], weight: ["400", "700"], variable: "--font-lato" });
+const greatVibes = Great_Vibes({ subsets: ["latin"], weight: ["400"], variable: "--font-vibes" });
 
 export const viewport: Viewport = {
-  themeColor: "#000000",
+  themeColor: "#123B2A", // forest-deep
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
@@ -14,8 +16,8 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "Cámara Desechable Digital",
-  description: "Una experiencia de cámara retro para tus eventos especiales.",
+  title: "Recuerdo de mis 15 años",
+  description: "Cámara y álbum de los 15 años de Nikolee Valezka.",
   manifest: "/manifest.json",
 };
 
@@ -25,8 +27,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" className="dark">
-      <body className={`${inter.className} bg-zinc-950 text-white min-h-[100dvh] safe-area-pt pb-safe flex flex-col overscroll-none`}>
+    <html lang="es">
+      <body className={`${playfair.variable} ${lato.variable} ${greatVibes.variable} font-sans bg-forest-deep text-cream min-h-[100dvh] safe-area-pt pb-safe flex flex-col overscroll-none`}>
+        <div className="forest-bg" />
         {children}
       </body>
     </html>

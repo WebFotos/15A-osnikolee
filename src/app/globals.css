@@ -9,18 +9,91 @@
   .pb-safe {
     padding-bottom: env(safe-area-inset-bottom);
   }
+  .mask-image-b {
+    mask-image: linear-gradient(to bottom, black 0%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, black 0%, transparent 100%);
+  }
+}
+
+:root {
+  --forest-deep: #123B2A;
+  --forest-natural: #2F6F4E;
+  --forest-emerald: #4F8F62;
+  --forest-light: #86A95A;
+  --gold-warm: #D8B65A;
+  --gold-soft: #E7CC82;
+  --cream: #FFF7E6;
+  --white-warm: #FFFDF7;
+  --brown-natural: #5E432A;
 }
 
 html, body {
   margin: 0;
   padding: 0;
-  height: 100dvh;
-  overflow: hidden;
-  background-color: #000;
-  color: #fff;
+  min-height: 100dvh;
+  background-color: var(--forest-deep);
+  color: var(--cream);
   touch-action: pan-x pan-y;
+  overscroll-behavior: none;
+}
+
+/* Background elements for the enchanted forest */
+.forest-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: 
+    radial-gradient(circle at 50% 0%, var(--forest-natural) 0%, transparent 60%),
+    radial-gradient(circle at 100% 100%, var(--forest-deep) 0%, var(--forest-deep) 100%);
+  background-color: var(--forest-deep);
+  overflow: hidden;
+}
+
+/* Subtle glowing lights/fireflies */
+.forest-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: 
+    radial-gradient(2px 2px at 20% 30%, var(--gold-soft) 50%, transparent 100%),
+    radial-gradient(3px 3px at 80% 40%, var(--gold-warm) 50%, transparent 100%),
+    radial-gradient(2px 2px at 40% 80%, var(--gold-soft) 50%, transparent 100%),
+    radial-gradient(2px 2px at 70% 90%, var(--cream) 50%, transparent 100%),
+    radial-gradient(1px 1px at 10% 60%, var(--gold-warm) 50%, transparent 100%);
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* Vignette edge for depth */
+.forest-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.7);
+  pointer-events: none;
 }
 
 * {
   box-sizing: border-box;
+}
+
+/* Custom button styles */
+.btn-gold {
+  background: linear-gradient(135deg, var(--gold-soft), var(--gold-warm));
+  color: var(--forest-deep);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 4px 15px rgba(216, 182, 90, 0.2);
+}
+
+.btn-gold:active {
+  transform: scale(0.98);
+  box-shadow: 0 2px 8px rgba(216, 182, 90, 0.2);
+}
+
+.text-gold {
+  color: var(--gold-warm);
+}
+
+.border-gold {
+  border-color: var(--gold-warm);
 }

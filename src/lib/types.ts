@@ -1,25 +1,24 @@
-export type EventStatus = 'DRAFT' | 'ACTIVE' | 'REVEALED' | 'CLOSED';
-
-export interface Event {
-  id: string;
-  name: string;
-  date: string; // ISO date string
-  revealAt: string; // ISO date string
-  status: EventStatus;
-  createdAt: string; // ISO date string
-}
+export type EventStatus = 'PRIVATE' | 'REVEALED';
 
 export interface GuestSession {
-  id: string;
-  eventId: string;
+  id: string; // The primary key (UUID)
   guestName: string;
   createdAt: string;
+  lastSeenAt?: string;
+  status?: string;
 }
 
 export interface Photo {
   id: string;
-  eventId: string;
-  sessionId: string;
-  dataUrl: string; // Base64 currently
+  guestSessionId: string; // Updated from sessionId to match prompt instructions
+  dataUrl?: string; // For local storage
+  storagePath?: string; // Prepared for Supabase
   createdAt: string;
 }
+
+export const EVENT_DETAILS = {
+  name: "Recuerdo de mis 15 años",
+  protagonist: "Nikolee Valezka",
+  location: "Sevilla",
+  date: "17/10/2026"
+};
