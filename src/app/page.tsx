@@ -90,7 +90,7 @@ export default function Home() {
           
           {session ? (
             <div className="w-full flex flex-col items-center gap-4 bg-black/40 p-6 rounded-3xl border border-gold-soft/20 backdrop-blur-sm shadow-xl">
-              <p className="font-serif text-2xl text-cream">Hola {session.guestName}</p>
+              <p className="font-serif text-2xl text-cream">Hola {session.guest_name}</p>
               
               <div className="flex items-center gap-2 mb-2">
                 <div className="w-2 h-2 rounded-full bg-gold-warm shadow-[0_0_10px_rgba(216,182,90,0.8)] animate-pulse" />

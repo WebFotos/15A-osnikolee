@@ -30,7 +30,7 @@ export default function AdminDashboardPage() {
     
     const sessions = await getAllSessions();
     const sessionsWithCount = sessions.map(s => {
-      const pCount = photos.filter(p => p.guestSessionId === s.id).length;
+      const pCount = photos.filter(p => p.session_id === s.id).length;
       return { ...s, photoCount: pCount };
     });
     
@@ -153,7 +153,7 @@ export default function AdminDashboardPage() {
             sessionsData.map((session) => (
               <div key={session.id} className="flex justify-between items-center border-b border-gold-soft/10 pb-3 last:border-0 last:pb-0">
                 <div>
-                  <p className="font-sans font-bold text-cream text-lg">{session.guestName}</p>
+                  <p className="font-sans font-bold text-cream text-lg">{session.guest_name}</p>
                   <p className="font-sans text-xs text-gold-soft/50">ID: {session.id.split('-')[0]}</p>
                 </div>
                 <div className={`px-4 py-1.5 rounded-full text-sm font-bold font-sans ${session.photoCount >= 24 ? 'bg-gold-warm/20 text-gold-warm' : 'bg-black/40 text-cream/80'}`}>

@@ -55,7 +55,7 @@ export default function CameraPage() {
         
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
-          videoRef.current.play();
+          // autoPlay on the element handles playback; no need to call .play() manually
         }
         setHasPermission(true);
       } catch (err) {
@@ -157,6 +157,7 @@ export default function CameraPage() {
       <div className="flex-1 relative w-full h-full">
         <video 
           ref={videoRef}
+          autoPlay
           playsInline
           muted
           className="absolute inset-0 w-full h-full object-cover"

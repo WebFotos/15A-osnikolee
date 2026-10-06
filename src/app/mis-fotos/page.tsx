@@ -3,14 +3,14 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getSessionPhotos, getEventStatus } from "@/lib/storage";
-import { Photo, EventStatus } from "@/lib/types";
+import { EventStatus, PhotoWithUrl } from "@/lib/types";
 import { Loader2, ArrowLeft, Image as ImageIcon } from "lucide-react";
 import Link from "next/link";
 
 export default function MisFotosPage() {
   const router = useRouter();
   
-  const [photos, setPhotos] = useState<Photo[]>([]);
+  const [photos, setPhotos] = useState<PhotoWithUrl[]>([]);
   const [status, setStatus] = useState<EventStatus>('PRIVATE');
   const [loading, setLoading] = useState(true);
 
@@ -81,7 +81,7 @@ export default function MisFotosPage() {
             <div key={photo.id} className="aspect-[3/4] relative bg-forest-deep/50 rounded-xl overflow-hidden border border-gold-soft/20 shadow-md">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img 
-                src={photo.dataUrl} 
+                src={photo.url} 
                 alt="Mi foto" 
                 className="w-full h-full object-cover"
               />

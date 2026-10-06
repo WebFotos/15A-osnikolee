@@ -2,15 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { getAllPhotos, getEventStatus } from "@/lib/storage";
-import { Photo, EventStatus, EVENT_DETAILS } from "@/lib/types";
+import { EventStatus, EVENT_DETAILS, PhotoWithUrl } from "@/lib/types";
 import { Loader2, ArrowLeft, X } from "lucide-react";
 import Link from "next/link";
 
 export default function AlbumPage() {
-  const [photos, setPhotos] = useState<Photo[]>([]);
+  const [photos, setPhotos] = useState<PhotoWithUrl[]>([]);
   const [status, setStatus] = useState<EventStatus>('PRIVATE');
   const [loading, setLoading] = useState(true);
-  const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
+  const [selectedPhoto, setSelectedPhoto] = useState<PhotoWithUrl | null>(null);
 
   useEffect(() => {
     async function loadAlbum() {
@@ -78,7 +78,7 @@ export default function AlbumPage() {
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img 
-                  src={photo.dataUrl} 
+                  src={photo.url} 
                   alt="Recuerdo" 
                   className="w-full h-full object-cover"
                 />
@@ -102,7 +102,7 @@ export default function AlbumPage() {
           <div className="flex-1 relative flex items-center justify-center">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img 
-              src={selectedPhoto.dataUrl} 
+              src={selectedPhoto.url} 
               alt="Recuerdo ampliado" 
               className="max-w-full max-h-full object-contain rounded-lg"
             />
