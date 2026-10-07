@@ -48,17 +48,26 @@ export default function CameraPage() {
 
     async function startCamera() {
       try {
-        stream = await navigator.mediaDevices.getUserMedia({ 
-          video: { facingMode: { ideal: "environment" } },
-          audio: false 
-        });
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({ 
+            video: { facingMode: { ideal: "environment" } },
+            audio: false 
+          });
+        } catch (fallbackErr) {
+          console.warn("Fallo con facingMode, intentando sin constraints:", fallbackErr);
+          stream = await navigator.mediaDevices.getUserMedia({ 
+            video: true,
+            audio: false 
+          });
+        }
         
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
-          // autoPlay on the element handles playback; no need to call .play() manually
+          videoRef.current.play().catch(e => console.error("Error al forzar play:", e));
         }
         setHasPermission(true);
       } catch (err) {
+        console.error("Error getUserMedia:", err);
         setHasPermission(false);
       } finally {
         setLoading(false);
@@ -122,7 +131,9 @@ export default function CameraPage() {
     return (
       <div className="flex flex-col min-h-[100dvh] items-center justify-center p-6 text-center z-10 relative">
         <h2 className="font-serif text-3xl font-bold text-cream mb-2">Cámara Bloqueada</h2>
-        <p className="font-sans text-gold-soft/80 mb-8 text-lg">Necesitamos acceso a la cámara para guardar estos momentos mágicos.</p>
+        <p className="font-sans text-gold-soft/80 mb-8 text-lg">
+          No pudimos acceder a la cámara. Por favor, revisa los permisos de tu navegador.
+        </p>
         <button 
           onClick={() => window.location.reload()}
           className="btn-gold px-8 py-4 rounded-2xl font-bold flex items-center gap-2"
