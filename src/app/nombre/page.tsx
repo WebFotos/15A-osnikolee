@@ -13,18 +13,18 @@ export default function NombrePage() {
   const handleJoin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
-    
+
     setJoining(true);
     try {
-      // Generate a new independent session (UUID) in the backend/storage
       const session = await createSession(name.trim());
-      
-      // Persist the session ID (not the name) in the browser
+
+      // Keep localStorage for backwards-compatible UI hints only — NOT for auth
       localStorage.setItem("cd_session", session.id);
-      
-      router.push(`/camara`);
+
+      router.push("/camara");
     } catch (err) {
-      alert("Error al crear la sesión.");
+      console.error(err);
+      alert(err instanceof Error ? err.message : "Error al crear la sesión.");
       setJoining(false);
     }
   };
@@ -32,13 +32,10 @@ export default function NombrePage() {
   return (
     <div className="flex flex-col min-h-[100dvh] p-6 relative z-10">
       <div className="flex-1 flex flex-col items-center justify-center max-w-md w-full mx-auto">
-        
         <Sparkles className="w-12 h-12 text-gold-soft mb-6 opacity-80" />
-        
+
         <h1 className="font-serif text-3xl mb-2 text-center text-cream">Antes de comenzar...</h1>
-        <p className="font-sans text-gold-soft/80 mb-10 text-center text-lg">
-          ¿Cómo te llamas?
-        </p>
+        <p className="font-sans text-gold-soft/80 mb-10 text-center text-lg">¿Cómo te llamas?</p>
 
         <form onSubmit={handleJoin} className="w-full space-y-8">
           <div>
@@ -50,6 +47,7 @@ export default function NombrePage() {
               onChange={(e) => setName(e.target.value)}
               required
               maxLength={30}
+              autoFocus
             />
           </div>
 
