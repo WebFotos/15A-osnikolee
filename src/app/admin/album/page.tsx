@@ -68,7 +68,7 @@ export default function AdminAlbumPage() {
   if (loading) {
     return (
       <div className="flex min-h-[100dvh] items-center justify-center relative z-10">
-        <Loader2 className="w-8 h-8 animate-spin text-gold-soft" />
+        <Loader2 className="w-8 h-8 animate-spin text-[#0A261D]" />
       </div>
     );
   }
@@ -81,23 +81,23 @@ export default function AdminAlbumPage() {
         <div className="flex items-center gap-4 mb-8 pt-4">
           <Link
             href="/admin"
-            className="w-12 h-12 rounded-full bg-forest-deep/50 border border-gold-soft/30 flex items-center justify-center backdrop-blur text-cream"
+            className="w-12 h-12 rounded-full bg-white/60 border border-gold-soft/30 flex items-center justify-center backdrop-blur text-[#0A261D]"
           >
             <ArrowLeft size={24} />
           </Link>
           <div>
-            <p className="font-script text-xl text-gold-soft">{EVENT_DETAILS.name}</p>
-            <h1 className="font-serif text-2xl font-bold text-cream">Álbum Completo</h1>
+            <p className="font-script text-xl text-[#0A261D]">{EVENT_DETAILS.name}</p>
+            <h1 className="font-serif text-2xl font-bold text-[#0A261D]">Álbum Completo</h1>
           </div>
         </div>
 
         {photos.length === 0 ? (
-          <div className="text-center text-gold-soft/50 py-20 font-sans text-lg">
+          <div className="text-center text-[#0A261D]/50 py-20 font-sans text-lg">
             Aún no hay fotografías. ¡Los invitados están capturando recuerdos!
           </div>
         ) : (
           <>
-            <p className="font-sans text-gold-soft/60 text-sm mb-6 text-right">
+            <p className="font-sans text-[#0A261D]/60 text-sm mb-6 text-right">
               {photos.length} {photos.length === 1 ? "fotografía" : "fotografías"}
             </p>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
@@ -105,7 +105,7 @@ export default function AdminAlbumPage() {
                 <div
                   key={photo.id}
                   onClick={() => openPhoto(index)}
-                  className="aspect-[3/4] relative bg-forest-deep/80 rounded-xl overflow-hidden shadow-lg border border-gold-soft/20 cursor-pointer hover:border-gold-warm hover:scale-[1.02] transition-all duration-200"
+                  className="aspect-[3/4] relative bg-white/80 rounded-xl overflow-hidden shadow-lg border border-gold-soft/20 cursor-pointer hover:border-gold-warm hover:scale-[1.02] transition-all duration-200"
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
@@ -146,7 +146,7 @@ export default function AdminAlbumPage() {
               </button>
               <button
                 onClick={closePhoto}
-                className="w-10 h-10 rounded-full bg-forest-deep border border-gold-soft/30 flex items-center justify-center text-cream ml-2"
+                className="w-10 h-10 rounded-full bg-forest-deep border border-gold-soft/30 flex items-center justify-center text-[#FFF7E6] ml-2"
               >
                 <X size={20} />
               </button>

@@ -187,35 +187,46 @@ export default function CameraPage() {
     const video = videoRef.current;
     const canvas = canvasRef.current;
     
-    // Configurar canvas a la resolución real que tenga el video (idealmente 4K)
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+    const MAX_WIDTH = 1920;
+    let rawWidth = video.videoWidth;
+    let rawHeight = video.videoHeight;
+    
+    let targetWidth = rawWidth;
+    let targetHeight = rawHeight;
+    
+    if (rawWidth > MAX_WIDTH) {
+      targetHeight = Math.floor(rawHeight * (MAX_WIDTH / rawWidth));
+      targetWidth = MAX_WIDTH;
+    }
+    
+    canvas.width = targetWidth;
+    canvas.height = targetHeight;
     
     const context = canvas.getContext('2d');
     if (context) {
       if (digitalZoom > 1) {
         // Crop the center for digital zoom
-        const sWidth = canvas.width / digitalZoom;
-        const sHeight = canvas.height / digitalZoom;
-        const sx = (canvas.width - sWidth) / 2;
-        const sy = (canvas.height - sHeight) / 2;
+        const sWidth = rawWidth / digitalZoom;
+        const sHeight = rawHeight / digitalZoom;
+        const sx = (rawWidth - sWidth) / 2;
+        const sy = (rawHeight - sHeight) / 2;
         
-        context.drawImage(video, sx, sy, sWidth, sHeight, 0, 0, canvas.width, canvas.height);
+        context.drawImage(video, sx, sy, sWidth, sHeight, 0, 0, targetWidth, targetHeight);
       } else {
-        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        context.drawImage(video, 0, 0, targetWidth, targetHeight);
       }
       
       setFlash(true);
       setTimeout(() => setFlash(false), 150);
 
-      // Usar máxima calidad JPEG posible
-      const dataUrl = canvas.toDataURL('image/jpeg', 1.0);
+      // Usar calidad JPEG 0.85
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
       
       try {
         await savePhoto(sessionId, dataUrl);
         setPhotoCount(prev => prev + 1);
       } catch (err: any) {
-        alert(err.message || "Error al guardar foto");
+        alert("Error al guardar: " + (err.message || err.toString() || "Error de red/memoria"));
       }
     }
     
@@ -229,16 +240,16 @@ export default function CameraPage() {
       
       {/* OVERLAY DE CARGA */}
       {loading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-forest-deep z-50">
-          <Loader2 className="w-8 h-8 animate-spin text-gold-soft" />
+        <div className="absolute inset-0 flex items-center justify-center bg-[#e2f1e4] z-50">
+          <Loader2 className="w-8 h-8 animate-spin text-[#0A261D]" />
         </div>
       )}
 
       {/* OVERLAY DE ERROR DE PERMISOS */}
       {!loading && hasPermission === false && (
         <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center z-50 bg-forest-deep">
-          <h2 className="font-serif text-3xl font-bold text-cream mb-2">Cámara Bloqueada</h2>
-          <p className="font-sans text-gold-soft/80 mb-8 text-lg">
+          <h2 className="font-serif text-3xl font-bold text-[#0A261D] mb-2">Cámara Bloqueada</h2>
+          <p className="font-sans text-[#0A261D]/80 mb-8 text-lg">
             No pudimos acceder a la cámara. Por favor, revisa los permisos de tu navegador.
           </p>
           <p className="font-sans text-red-400 mb-8 text-sm">Estado interno: {cameraStatus}</p>
@@ -267,7 +278,7 @@ export default function CameraPage() {
 
         <button 
           onClick={() => router.push(`/mis-fotos`)}
-          className="px-5 py-2.5 rounded-full bg-forest-deep/80 border border-gold-soft/30 backdrop-blur font-sans font-bold text-gold-soft text-sm flex items-center gap-2 shadow-lg"
+          className="px-5 py-2.5 rounded-full bg-forest-deep/80 border border-gold-soft/30 backdrop-blur font-sans font-bold text-[#E7CC82] text-sm flex items-center gap-2 shadow-lg"
         >
           <Images size={18} />
           Mis Fotos
@@ -300,7 +311,7 @@ export default function CameraPage() {
         {/* Zoom Slider (Only visible if hardware supports it) */}
         {zoomCapabilities && (
           <div className="w-full px-12 mb-4 pointer-events-auto flex items-center gap-3">
-            <ZoomIn className="w-5 h-5 text-gold-soft drop-shadow-md" />
+            <ZoomIn className="w-5 h-5 text-[#0A261D] drop-shadow-md" />
             <input 
               type="range" 
               min={zoomCapabilities.min} 
@@ -333,10 +344,10 @@ export default function CameraPage() {
       </div>
       
       {photoCount >= MAX_PHOTOS && (
-        <div className="absolute inset-0 z-50 bg-forest-deep/95 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center pointer-events-auto">
+        <div className="absolute inset-0 z-50 bg-[#e2f1e4]/95 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center pointer-events-auto">
           <Sparkles className="w-16 h-16 text-gold-warm mb-6" />
-          <h2 className="font-serif text-4xl font-bold text-cream mb-4">¡Rollo Terminado!</h2>
-          <p className="font-sans text-gold-soft/80 mb-10 text-lg">Has tomado tus {MAX_PHOTOS} fotografías. Disfruta de la fiesta.</p>
+          <h2 className="font-serif text-4xl font-bold text-[#0A261D] mb-4">¡Rollo Terminado!</h2>
+          <p className="font-sans text-[#0A261D]/80 mb-10 text-lg">Has tomado tus {MAX_PHOTOS} fotografías. Disfruta de la fiesta.</p>
           
           <button 
             onClick={() => router.push(`/mis-fotos`)}
