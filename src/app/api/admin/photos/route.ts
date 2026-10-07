@@ -32,10 +32,16 @@ export async function GET() {
 
     const photosWithUrls = await Promise.all(
       photos.map(async (photo) => {
-        const { data } = await supabaseAdmin.storage
-          .from('event_photos')
-          .createSignedUrl(photo.storage_path, SIGNED_URL_EXPIRY);
-        return { ...photo, url: data?.signedUrl ?? '' };
+        try {
+          const { data, error } = await supabaseAdmin.storage
+            .from('event_photos')
+            .createSignedUrl(photo.storage_path, SIGNED_URL_EXPIRY);
+          if (error) console.error("URL error:", error);
+          return { ...photo, url: data?.signedUrl ?? '' };
+        } catch (e) {
+          console.error("URL exception:", e);
+          return { ...photo, url: '' };
+        }
       })
     );
 

@@ -22,6 +22,7 @@ export default function CameraPage() {
   
   const [zoomCapabilities, setZoomCapabilities] = useState<{min: number, max: number, step: number} | null>(null);
   const [zoomValue, setZoomValue] = useState<number>(1);
+  const [digitalZoom, setDigitalZoom] = useState<number>(1);
   const [videoTrack, setVideoTrack] = useState<MediaStreamTrack | null>(null);
 
   const sessionId = typeof window !== 'undefined' ? localStorage.getItem(`cd_session`) : null;
@@ -153,12 +154,27 @@ export default function CameraPage() {
   const handleZoomChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = parseFloat(e.target.value);
     setZoomValue(val);
+    
+    let hardwareZoomSuccess = false;
+
     if (videoTrack && videoTrack.applyConstraints) {
       try {
         await videoTrack.applyConstraints({ advanced: [{ zoom: val } as any] });
+        hardwareZoomSuccess = true;
       } catch (err) {
-        console.warn("Error aplicando zoom:", err);
+        try {
+          await videoTrack.applyConstraints({ zoom: val } as any);
+          hardwareZoomSuccess = true;
+        } catch (e2) {
+          console.warn("Hardware zoom no soportado activamente", e2);
+        }
       }
+    }
+
+    if (!hardwareZoomSuccess) {
+      setDigitalZoom(val);
+    } else {
+      setDigitalZoom(1);
     }
   };
 
@@ -177,7 +193,17 @@ export default function CameraPage() {
     
     const context = canvas.getContext('2d');
     if (context) {
-      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      if (digitalZoom > 1) {
+        // Crop the center for digital zoom
+        const sWidth = canvas.width / digitalZoom;
+        const sHeight = canvas.height / digitalZoom;
+        const sx = (canvas.width - sWidth) / 2;
+        const sy = (canvas.height - sHeight) / 2;
+        
+        context.drawImage(video, sx, sy, sWidth, sHeight, 0, 0, canvas.width, canvas.height);
+      } else {
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      }
       
       setFlash(true);
       setTimeout(() => setFlash(false), 150);
@@ -249,13 +275,14 @@ export default function CameraPage() {
       </div>
 
       {/* Viewfinder */}
-      <div className="flex-1 relative w-full h-full bg-black">
+      <div className="flex-1 relative w-full h-full bg-black overflow-hidden flex items-center justify-center">
         <video 
           ref={videoRef}
           autoPlay
           playsInline
           muted
-          className={`absolute inset-0 w-full h-full object-cover z-0 ${(!loading && hasPermission) ? 'opacity-100' : 'opacity-0'}`}
+          style={digitalZoom > 1 ? { transform: `scale(${digitalZoom})`, transformOrigin: 'center', transition: 'transform 0.1s ease-out' } : undefined}
+          className={`absolute w-full h-full object-cover z-0 ${(!loading && hasPermission) ? 'opacity-100' : 'opacity-0'}`}
         />
         
         {/* Flash overlay */}

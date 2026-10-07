@@ -15,8 +15,13 @@ export default function AdminAlbumPage() {
   useEffect(() => {
     async function loadAlbum() {
       try {
-        const allPhotos = await getAllPhotos();
-        setPhotos(allPhotos.reverse());
+        const res = await fetch('/api/admin/photos');
+        if (res.ok) {
+          const allPhotos = await res.json();
+          setPhotos(allPhotos);
+        } else {
+          console.error("Error fetching photos", await res.text());
+        }
       } catch (err) {
         console.error(err);
       } finally {
