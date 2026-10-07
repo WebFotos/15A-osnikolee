@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { savePhoto, getSessionPhotos } from "@/lib/storage";
-import { X, Loader2, RefreshCw, Images, Sparkles } from "lucide-react";
+import { X, Loader2, RefreshCw, Images, Sparkles, ZoomIn } from "lucide-react";
 
 const MAX_PHOTOS = 24;
 
@@ -19,6 +19,10 @@ export default function CameraPage() {
   const [capturing, setCapturing] = useState(false);
   const [flash, setFlash] = useState(false);
   const [cameraStatus, setCameraStatus] = useState("Iniciando cámara...");
+  
+  const [zoomCapabilities, setZoomCapabilities] = useState<{min: number, max: number, step: number} | null>(null);
+  const [zoomValue, setZoomValue] = useState<number>(1);
+  const [videoTrack, setVideoTrack] = useState<MediaStreamTrack | null>(null);
 
   const sessionId = typeof window !== 'undefined' ? localStorage.getItem(`cd_session`) : null;
 
@@ -45,28 +49,36 @@ export default function CameraPage() {
 
     async function startCamera() {
       try {
-        setCameraStatus("Solicitando permisos (exact environment)...");
+        setCameraStatus("Solicitando permisos (exact environment 4K)...");
         try {
-          // Intento 1: Cámara trasera explícita
+          // Intento 1: Cámara trasera explícita 4K
           stream = await navigator.mediaDevices.getUserMedia({ 
-            video: { facingMode: { exact: "environment" } },
+            video: { 
+              facingMode: { exact: "environment" },
+              width: { ideal: 3840, max: 4096 },
+              height: { ideal: 2160 },
+            },
             audio: false 
           });
           setCameraStatus("Stream asignado (exact)");
         } catch (e1) {
           console.warn("Intento 1 falló:", e1);
-          setCameraStatus("Solicitando permisos (ideal environment)...");
+          setCameraStatus("Solicitando permisos (ideal environment 4K)...");
           try {
-            // Intento 2: Ideal
+            // Intento 2: Ideal 4K
             stream = await navigator.mediaDevices.getUserMedia({ 
-              video: { facingMode: "environment" },
+              video: { 
+                facingMode: "environment",
+                width: { ideal: 3840, max: 4096 },
+                height: { ideal: 2160 },
+              },
               audio: false 
             });
             setCameraStatus("Stream asignado (ideal)");
           } catch (e2) {
             console.warn("Intento 2 falló:", e2);
             setCameraStatus("Solicitando permisos (cualquier cámara)...");
-            // Intento 3: Cualquier cámara
+            // Intento 3: Cualquier cámara, resolucion default
             stream = await navigator.mediaDevices.getUserMedia({ 
               video: true,
               audio: false 
@@ -83,6 +95,30 @@ export default function CameraPage() {
 
         if (stream) {
           videoRef.current.srcObject = stream;
+          
+          const track = stream.getVideoTracks()[0];
+          if (track) {
+            setVideoTrack(track);
+            const capabilities = (track as any).getCapabilities ? (track as any).getCapabilities() : {};
+            
+            if (capabilities.zoom) {
+              setZoomCapabilities({ 
+                min: capabilities.zoom.min, 
+                max: capabilities.zoom.max, 
+                step: capabilities.zoom.step 
+              });
+              setZoomValue(capabilities.zoom.min || 1);
+            }
+            
+            if (capabilities.focusMode && capabilities.focusMode.includes('continuous')) {
+              try {
+                await track.applyConstraints({ advanced: [{ focusMode: 'continuous' } as any] });
+              } catch (err) {
+                console.warn("No se pudo aplicar focusMode continuo", err);
+              }
+            }
+          }
+
           videoRef.current.onloadedmetadata = () => {
             setCameraStatus("Metadatos cargados, forzando play...");
             videoRef.current?.play()
@@ -114,6 +150,18 @@ export default function CameraPage() {
     };
   }, [sessionId]);
 
+  const handleZoomChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = parseFloat(e.target.value);
+    setZoomValue(val);
+    if (videoTrack && videoTrack.applyConstraints) {
+      try {
+        await videoTrack.applyConstraints({ advanced: [{ zoom: val } as any] });
+      } catch (err) {
+        console.warn("Error aplicando zoom:", err);
+      }
+    }
+  };
+
   const takePhoto = async () => {
     if (photoCount >= MAX_PHOTOS || capturing) return;
     if (!videoRef.current || !canvasRef.current || !sessionId) return;
@@ -123,6 +171,7 @@ export default function CameraPage() {
     const video = videoRef.current;
     const canvas = canvasRef.current;
     
+    // Configurar canvas a la resolución real que tenga el video (idealmente 4K)
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     
@@ -133,7 +182,8 @@ export default function CameraPage() {
       setFlash(true);
       setTimeout(() => setFlash(false), 150);
 
-      const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+      // Usar máxima calidad JPEG posible
+      const dataUrl = canvas.toDataURL('image/jpeg', 1.0);
       
       try {
         await savePhoto(sessionId, dataUrl);
@@ -151,7 +201,7 @@ export default function CameraPage() {
   return (
     <div className="relative h-[100dvh] w-full bg-black overflow-hidden flex flex-col z-50">
       
-      {/* OVERLAY DE CARGA (Oculta mediante CSS sin destruir el DOM inferior) */}
+      {/* OVERLAY DE CARGA */}
       {loading && (
         <div className="absolute inset-0 flex items-center justify-center bg-forest-deep z-50">
           <Loader2 className="w-8 h-8 animate-spin text-gold-soft" />
@@ -198,7 +248,7 @@ export default function CameraPage() {
         </button>
       </div>
 
-      {/* Viewfinder - ESTE ELEMENTO SIEMPRE SE RENDERIZA INCONDICIONALMENTE */}
+      {/* Viewfinder */}
       <div className="flex-1 relative w-full h-full bg-black">
         <video 
           ref={videoRef}
@@ -218,10 +268,26 @@ export default function CameraPage() {
       <canvas ref={canvasRef} className="hidden" />
 
       {/* Controls */}
-      <div className="absolute bottom-0 left-0 right-0 z-40 pb-safe pb-8 pt-16 bg-gradient-to-t from-black via-black/80 to-transparent flex flex-col justify-center items-center gap-6">
+      <div className="absolute bottom-0 left-0 right-0 z-40 pb-safe pb-8 pt-24 bg-gradient-to-t from-black via-black/80 to-transparent flex flex-col justify-end items-center gap-6 pointer-events-none">
         
+        {/* Zoom Slider (Only visible if hardware supports it) */}
+        {zoomCapabilities && (
+          <div className="w-full px-12 mb-4 pointer-events-auto flex items-center gap-3">
+            <ZoomIn className="w-5 h-5 text-gold-soft drop-shadow-md" />
+            <input 
+              type="range" 
+              min={zoomCapabilities.min} 
+              max={zoomCapabilities.max} 
+              step={zoomCapabilities.step} 
+              value={zoomValue} 
+              onChange={handleZoomChange}
+              className="w-full accent-gold-warm h-1 bg-white/20 rounded-lg appearance-none cursor-pointer"
+            />
+          </div>
+        )}
+
         {/* Counter */}
-        <div className="font-sans font-bold text-cream/90 tracking-widest text-sm bg-black/40 px-4 py-1.5 rounded-full backdrop-blur border border-white/10 shadow-lg">
+        <div className="font-sans font-bold text-cream/90 tracking-widest text-sm bg-black/40 px-4 py-1.5 rounded-full backdrop-blur border border-white/10 shadow-lg pointer-events-auto">
           {photoCount} / {MAX_PHOTOS} FOTOS
         </div>
 
@@ -229,7 +295,7 @@ export default function CameraPage() {
         <button
           onClick={takePhoto}
           disabled={photoCount >= MAX_PHOTOS || capturing}
-          className={`w-24 h-24 rounded-full border-4 flex items-center justify-center transition-all shadow-xl ${
+          className={`w-24 h-24 rounded-full border-4 flex items-center justify-center transition-all shadow-xl pointer-events-auto ${
             photoCount >= MAX_PHOTOS 
               ? 'border-forest-deep/50 bg-forest-deep/30 opacity-50' 
               : 'border-gold-warm bg-white/10 active:scale-95 shadow-[0_0_20px_rgba(216,182,90,0.4)]'
@@ -240,7 +306,7 @@ export default function CameraPage() {
       </div>
       
       {photoCount >= MAX_PHOTOS && (
-        <div className="absolute inset-0 z-50 bg-forest-deep/95 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center">
+        <div className="absolute inset-0 z-50 bg-forest-deep/95 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center pointer-events-auto">
           <Sparkles className="w-16 h-16 text-gold-warm mb-6" />
           <h2 className="font-serif text-4xl font-bold text-cream mb-4">¡Rollo Terminado!</h2>
           <p className="font-sans text-gold-soft/80 mb-10 text-lg">Has tomado tus {MAX_PHOTOS} fotografías. Disfruta de la fiesta.</p>

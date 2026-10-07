@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { EventStatus, EVENT_DETAILS } from "@/lib/types";
-import { Loader2, QrCode, Unlock, Lock, Camera, Users, ArrowLeft, RefreshCw } from "lucide-react";
+import { EVENT_DETAILS } from "@/lib/types";
+import { Loader2, QrCode, Camera, Users, ArrowLeft, RefreshCw, Images, Download } from "lucide-react";
+import JSZip from "jszip";
+import { saveAs } from "file-saver";
 
 interface SessionRow {
   id: string;
@@ -13,11 +15,12 @@ interface SessionRow {
 }
 
 export default function AdminDashboardPage() {
-  const [status, setStatus] = useState<EventStatus>("PRIVATE");
   const [photoCount, setPhotoCount] = useState(0);
   const [sessionsData, setSessionsData] = useState<SessionRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [updating, setUpdating] = useState(false);
+  
+  const [downloading, setDownloading] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState({ current: 0, total: 0 });
 
   useEffect(() => {
     loadData();
@@ -26,16 +29,7 @@ export default function AdminDashboardPage() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [eventRes, sessionsRes] = await Promise.all([
-        fetch("/api/admin/event"),
-        fetch("/api/admin/sessions"),
-      ]);
-
-      if (eventRes.ok) {
-        const event = await eventRes.json();
-        setStatus(event.status);
-      }
-
+      const sessionsRes = await fetch("/api/admin/sessions");
       if (sessionsRes.ok) {
         const sessions: SessionRow[] = await sessionsRes.json();
         setSessionsData(sessions);
@@ -48,25 +42,61 @@ export default function AdminDashboardPage() {
     }
   };
 
-  const handleUpdateStatus = async (newStatus: EventStatus) => {
-    if (!confirm(`¿Seguro que quieres cambiar el estado a ${newStatus}?`)) return;
-    setUpdating(true);
+  const handleDownloadZip = async () => {
     try {
-      const res = await fetch("/api/admin/event", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: newStatus }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setStatus(data.status);
-      } else {
-        alert("Error al actualizar estado");
+      setDownloading(true);
+      
+      const res = await fetch("/api/admin/photos");
+      if (!res.ok) throw new Error("Error al obtener urls de fotos");
+      
+      const photos = await res.json();
+      if (!photos || photos.length === 0) {
+        alert("No hay fotografías para descargar.");
+        setDownloading(false);
+        return;
       }
-    } catch {
-      alert("Error al actualizar estado");
+
+      setDownloadProgress({ current: 0, total: photos.length });
+
+      const zip = new JSZip();
+      const folder = zip.folder("15_Anos_Nikolee_Fotos");
+
+      const CONCURRENCY = 5;
+      let completed = 0;
+      
+      for (let i = 0; i < photos.length; i += CONCURRENCY) {
+        const batch = photos.slice(i, i + CONCURRENCY);
+        
+        await Promise.all(
+          batch.map(async (photo: any) => {
+            try {
+              const imgRes = await fetch(photo.url);
+              if (!imgRes.ok) throw new Error(`HTTP error! status: ${imgRes.status}`);
+              const blob = await imgRes.blob();
+              
+              const guestName = photo.guest_sessions?.guest_name || "invitado";
+              const filename = `${guestName.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_${photo.id.substring(0, 8)}.jpg`;
+                
+              folder?.file(filename, blob);
+            } catch (err) {
+              console.error(`Error descargando foto ${photo.id}:`, err);
+            } finally {
+              completed++;
+              setDownloadProgress(prev => ({ ...prev, current: completed }));
+            }
+          })
+        );
+      }
+
+      const zipBlob = await zip.generateAsync({ type: "blob" });
+      saveAs(zipBlob, "15_Anos_Nikolee_Todas_Las_Fotos.zip");
+      
+    } catch (err) {
+      console.error(err);
+      alert("Hubo un error al crear el archivo ZIP.");
     } finally {
-      setUpdating(false);
+      setDownloading(false);
+      setDownloadProgress({ current: 0, total: 0 });
     }
   };
 
@@ -98,18 +128,6 @@ export default function AdminDashboardPage() {
             <div>
               <p className="font-script text-2xl text-gold-soft mb-1">{EVENT_DETAILS.name}</p>
               <h1 className="font-serif text-3xl font-bold mb-2 text-cream">{EVENT_DETAILS.protagonist}</h1>
-              <div className="font-sans text-cream/70 flex items-center gap-2 text-sm uppercase tracking-wider">
-                ESTADO:{" "}
-                <span
-                  className={`font-bold px-3 py-1 rounded-full text-xs ${
-                    status === "REVEALED"
-                      ? "bg-gold-warm/20 text-gold-warm"
-                      : "bg-black/30 text-cream/60 border border-cream/10"
-                  }`}
-                >
-                  {status === "REVEALED" ? "ÁLBUM REVELADO" : "FOTOGRAFÍAS PRIVADAS"}
-                </span>
-              </div>
             </div>
           </div>
 
@@ -144,32 +162,30 @@ export default function AdminDashboardPage() {
 
         <h2 className="font-serif text-2xl font-bold mb-6 text-gold-warm">Control del Álbum</h2>
         <div className="space-y-4 mb-12">
-          {status === "PRIVATE" && (
-            <button
-              onClick={() => handleUpdateStatus("REVEALED")}
-              disabled={updating}
-              className="w-full btn-gold text-forest-deep font-sans font-bold py-5 rounded-2xl flex items-center justify-center transition-all disabled:opacity-50 text-lg shadow-[0_0_20px_rgba(216,182,90,0.3)]"
-            >
-              <Unlock className="w-6 h-6 mr-3" /> REVELAR FOTOGRAFÍAS
-            </button>
-          )}
-          {status === "REVEALED" && (
-            <div className="flex flex-col gap-4">
-              <Link
-                href="/album"
-                className="w-full btn-gold text-forest-deep font-sans font-bold py-5 rounded-2xl flex items-center justify-center transition-colors text-lg"
-              >
-                VER ÁLBUM
-              </Link>
-              <button
-                onClick={() => handleUpdateStatus("PRIVATE")}
-                disabled={updating}
-                className="w-full bg-black/40 text-cream/70 hover:bg-black/60 font-sans font-bold py-4 rounded-2xl flex items-center justify-center transition-colors disabled:opacity-50 border border-cream/10"
-              >
-                <Lock className="w-5 h-5 mr-2" /> Ocultar Fotografías
-              </button>
-            </div>
-          )}
+          <Link
+            href="/admin/album"
+            className="w-full btn-gold text-forest-deep font-sans font-bold py-5 rounded-2xl flex items-center justify-center transition-all text-lg shadow-[0_0_20px_rgba(216,182,90,0.3)]"
+          >
+            <Images className="w-6 h-6 mr-3" /> VER ÁLBUM COMPLETO
+          </Link>
+          <button
+            onClick={handleDownloadZip}
+            disabled={downloading}
+            className="w-full bg-forest-natural text-cream hover:bg-forest-emerald font-sans font-bold py-5 rounded-2xl flex items-center justify-center transition-colors disabled:opacity-50 text-lg shadow-lg border border-gold-soft/30"
+          >
+            {downloading ? (
+              <>
+                <Loader2 className="w-6 h-6 mr-3 animate-spin" /> 
+                {downloadProgress.current === downloadProgress.total && downloadProgress.total > 0 
+                  ? "Generando ZIP..." 
+                  : `Descargando... ${downloadProgress.current} / ${downloadProgress.total}`}
+              </>
+            ) : (
+              <>
+                <Download className="w-6 h-6 mr-3" /> DESCARGAR TODAS (ZIP)
+              </>
+            )}
+          </button>
         </div>
 
         <h2 className="font-serif text-2xl font-bold mb-6 text-gold-warm">Sesiones de Invitados</h2>
