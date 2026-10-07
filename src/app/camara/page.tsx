@@ -75,7 +75,13 @@ export default function CameraPage() {
           }
         }
         
-        if (videoRef.current && stream) {
+        if (!videoRef.current) {
+          setCameraStatus("Error crítico: El elemento de vídeo no se montó en el DOM.");
+          setHasPermission(false);
+          return;
+        }
+
+        if (stream) {
           videoRef.current.srcObject = stream;
           videoRef.current.onloadedmetadata = () => {
             setCameraStatus("Metadatos cargados, forzando play...");
@@ -86,10 +92,8 @@ export default function CameraPage() {
                 setCameraStatus(`Error play: ${e.name}`);
               });
           };
-        } else {
-          setCameraStatus("Error: videoRef no existe");
+          setHasPermission(true);
         }
-        setHasPermission(true);
       } catch (err: any) {
         console.error("Error getUserMedia general:", err);
         setCameraStatus(`Error crítico: ${err.name || err.message}`);
@@ -144,42 +148,40 @@ export default function CameraPage() {
 
   if (!sessionId) return null;
 
-  if (loading) {
-    return (
-      <div className="flex min-h-[100dvh] items-center justify-center bg-forest-deep z-50 absolute inset-0">
-        <Loader2 className="w-8 h-8 animate-spin text-gold-soft" />
-      </div>
-    );
-  }
-
-  if (hasPermission === false) {
-    return (
-      <div className="flex flex-col min-h-[100dvh] items-center justify-center p-6 text-center z-10 relative bg-forest-deep">
-        <h2 className="font-serif text-3xl font-bold text-cream mb-2">Cámara Bloqueada</h2>
-        <p className="font-sans text-gold-soft/80 mb-8 text-lg">
-          No pudimos acceder a la cámara. Por favor, revisa los permisos de tu navegador.
-        </p>
-        <p className="font-sans text-red-400 mb-8 text-sm">Estado interno: {cameraStatus}</p>
-        <button 
-          onClick={() => window.location.reload()}
-          className="btn-gold px-8 py-4 rounded-2xl font-bold flex items-center gap-2"
-        >
-          <RefreshCw size={20} /> Reintentar
-        </button>
-      </div>
-    );
-  }
-
   return (
     <div className="relative h-[100dvh] w-full bg-black overflow-hidden flex flex-col z-50">
       
+      {/* OVERLAY DE CARGA (Oculta mediante CSS sin destruir el DOM inferior) */}
+      {loading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-forest-deep z-50">
+          <Loader2 className="w-8 h-8 animate-spin text-gold-soft" />
+        </div>
+      )}
+
+      {/* OVERLAY DE ERROR DE PERMISOS */}
+      {!loading && hasPermission === false && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center z-50 bg-forest-deep">
+          <h2 className="font-serif text-3xl font-bold text-cream mb-2">Cámara Bloqueada</h2>
+          <p className="font-sans text-gold-soft/80 mb-8 text-lg">
+            No pudimos acceder a la cámara. Por favor, revisa los permisos de tu navegador.
+          </p>
+          <p className="font-sans text-red-400 mb-8 text-sm">Estado interno: {cameraStatus}</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="btn-gold px-8 py-4 rounded-2xl font-bold flex items-center gap-2"
+          >
+            <RefreshCw size={20} /> Reintentar
+          </button>
+        </div>
+      )}
+
       {/* Debug Status */}
       <div className="absolute top-16 right-4 z-[60] bg-black/60 text-white text-xs px-2 py-1 rounded font-mono">
         {cameraStatus}
       </div>
 
       {/* Top Bar */}
-      <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between p-4 safe-area-pt bg-gradient-to-b from-black/80 to-transparent">
+      <div className="absolute top-0 left-0 right-0 z-40 flex items-center justify-between p-4 safe-area-pt bg-gradient-to-b from-black/80 to-transparent">
         <button 
           onClick={() => router.push(`/`)}
           className="w-12 h-12 rounded-full bg-forest-deep/80 border border-gold-soft/30 flex items-center justify-center backdrop-blur text-cream shadow-lg"
@@ -196,14 +198,14 @@ export default function CameraPage() {
         </button>
       </div>
 
-      {/* Viewfinder */}
+      {/* Viewfinder - ESTE ELEMENTO SIEMPRE SE RENDERIZA INCONDICIONALMENTE */}
       <div className="flex-1 relative w-full h-full bg-black">
         <video 
           ref={videoRef}
           autoPlay
           playsInline
           muted
-          className="absolute inset-0 w-full h-full object-cover z-0"
+          className={`absolute inset-0 w-full h-full object-cover z-0 ${(!loading && hasPermission) ? 'opacity-100' : 'opacity-0'}`}
         />
         
         {/* Flash overlay */}
@@ -216,7 +218,7 @@ export default function CameraPage() {
       <canvas ref={canvasRef} className="hidden" />
 
       {/* Controls */}
-      <div className="absolute bottom-0 left-0 right-0 z-10 pb-safe pb-8 pt-16 bg-gradient-to-t from-black via-black/80 to-transparent flex flex-col justify-center items-center gap-6">
+      <div className="absolute bottom-0 left-0 right-0 z-40 pb-safe pb-8 pt-16 bg-gradient-to-t from-black via-black/80 to-transparent flex flex-col justify-center items-center gap-6">
         
         {/* Counter */}
         <div className="font-sans font-bold text-cream/90 tracking-widest text-sm bg-black/40 px-4 py-1.5 rounded-full backdrop-blur border border-white/10 shadow-lg">
@@ -238,7 +240,7 @@ export default function CameraPage() {
       </div>
       
       {photoCount >= MAX_PHOTOS && (
-        <div className="absolute inset-0 z-30 bg-forest-deep/95 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center">
+        <div className="absolute inset-0 z-50 bg-forest-deep/95 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center">
           <Sparkles className="w-16 h-16 text-gold-warm mb-6" />
           <h2 className="font-serif text-4xl font-bold text-cream mb-4">¡Rollo Terminado!</h2>
           <p className="font-sans text-gold-soft/80 mb-10 text-lg">Has tomado tus {MAX_PHOTOS} fotografías. Disfruta de la fiesta.</p>
