@@ -10,10 +10,10 @@ const config: Config = {
     extend: {
       colors: {
         forest: {
-          deep: '#123B2A',
-          natural: '#2F6F4E',
-          emerald: '#4F8F62',
-          light: '#86A95A',
+          deep: '#1A4D33',   /* was #123B2A */
+          natural: '#3B8B5B', /* was #2F6F4E */
+          emerald: '#5CB377', /* was #4F8F62 */
+          light: '#A3D274',   /* was #86A95A */
         },
         gold: {
           warm: '#D8B65A',

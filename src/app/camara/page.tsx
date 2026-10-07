@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { savePhoto, getSessionPhotos, getEventStatus } from "@/lib/storage";
+import { savePhoto, getSessionPhotos } from "@/lib/storage";
 import { X, Loader2, RefreshCw, Images, Sparkles } from "lucide-react";
 
 const MAX_PHOTOS = 24;
@@ -18,6 +18,7 @@ export default function CameraPage() {
   const [loading, setLoading] = useState(true);
   const [capturing, setCapturing] = useState(false);
   const [flash, setFlash] = useState(false);
+  const [cameraStatus, setCameraStatus] = useState("Iniciando cámara...");
 
   const sessionId = typeof window !== 'undefined' ? localStorage.getItem(`cd_session`) : null;
 
@@ -31,10 +32,6 @@ export default function CameraPage() {
       try {
         const photos = await getSessionPhotos(sessionId!);
         setPhotoCount(photos.length);
-        
-        // If event is revealed, maybe redirect to album or show a banner? 
-        // We'll just let them know or let them take photos if they want, but the requirement 
-        // doesn't say taking photos is blocked after reveal.
       } catch (err) {
         console.error(err);
       }
@@ -48,26 +45,54 @@ export default function CameraPage() {
 
     async function startCamera() {
       try {
+        setCameraStatus("Solicitando permisos (exact environment)...");
         try {
+          // Intento 1: Cámara trasera explícita
           stream = await navigator.mediaDevices.getUserMedia({ 
-            video: { facingMode: { ideal: "environment" } },
+            video: { facingMode: { exact: "environment" } },
             audio: false 
           });
-        } catch (fallbackErr) {
-          console.warn("Fallo con facingMode, intentando sin constraints:", fallbackErr);
-          stream = await navigator.mediaDevices.getUserMedia({ 
-            video: true,
-            audio: false 
-          });
+          setCameraStatus("Stream asignado (exact)");
+        } catch (e1) {
+          console.warn("Intento 1 falló:", e1);
+          setCameraStatus("Solicitando permisos (ideal environment)...");
+          try {
+            // Intento 2: Ideal
+            stream = await navigator.mediaDevices.getUserMedia({ 
+              video: { facingMode: "environment" },
+              audio: false 
+            });
+            setCameraStatus("Stream asignado (ideal)");
+          } catch (e2) {
+            console.warn("Intento 2 falló:", e2);
+            setCameraStatus("Solicitando permisos (cualquier cámara)...");
+            // Intento 3: Cualquier cámara
+            stream = await navigator.mediaDevices.getUserMedia({ 
+              video: true,
+              audio: false 
+            });
+            setCameraStatus("Stream asignado (fallback)");
+          }
         }
         
-        if (videoRef.current) {
+        if (videoRef.current && stream) {
           videoRef.current.srcObject = stream;
-          videoRef.current.play().catch(e => console.error("Error al forzar play:", e));
+          videoRef.current.onloadedmetadata = () => {
+            setCameraStatus("Metadatos cargados, forzando play...");
+            videoRef.current?.play()
+              .then(() => setCameraStatus("Reproduciendo"))
+              .catch(e => {
+                console.error("Error al forzar play:", e);
+                setCameraStatus(`Error play: ${e.name}`);
+              });
+          };
+        } else {
+          setCameraStatus("Error: videoRef no existe");
         }
         setHasPermission(true);
-      } catch (err) {
-        console.error("Error getUserMedia:", err);
+      } catch (err: any) {
+        console.error("Error getUserMedia general:", err);
+        setCameraStatus(`Error crítico: ${err.name || err.message}`);
         setHasPermission(false);
       } finally {
         setLoading(false);
@@ -129,11 +154,12 @@ export default function CameraPage() {
 
   if (hasPermission === false) {
     return (
-      <div className="flex flex-col min-h-[100dvh] items-center justify-center p-6 text-center z-10 relative">
+      <div className="flex flex-col min-h-[100dvh] items-center justify-center p-6 text-center z-10 relative bg-forest-deep">
         <h2 className="font-serif text-3xl font-bold text-cream mb-2">Cámara Bloqueada</h2>
         <p className="font-sans text-gold-soft/80 mb-8 text-lg">
           No pudimos acceder a la cámara. Por favor, revisa los permisos de tu navegador.
         </p>
+        <p className="font-sans text-red-400 mb-8 text-sm">Estado interno: {cameraStatus}</p>
         <button 
           onClick={() => window.location.reload()}
           className="btn-gold px-8 py-4 rounded-2xl font-bold flex items-center gap-2"
@@ -146,6 +172,12 @@ export default function CameraPage() {
 
   return (
     <div className="relative h-[100dvh] w-full bg-black overflow-hidden flex flex-col z-50">
+      
+      {/* Debug Status */}
+      <div className="absolute top-16 right-4 z-[60] bg-black/60 text-white text-xs px-2 py-1 rounded font-mono">
+        {cameraStatus}
+      </div>
+
       {/* Top Bar */}
       <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between p-4 safe-area-pt bg-gradient-to-b from-black/80 to-transparent">
         <button 
@@ -165,13 +197,13 @@ export default function CameraPage() {
       </div>
 
       {/* Viewfinder */}
-      <div className="flex-1 relative w-full h-full">
+      <div className="flex-1 relative w-full h-full bg-black">
         <video 
           ref={videoRef}
           autoPlay
           playsInline
           muted
-          className="absolute inset-0 w-full h-full object-cover"
+          className="absolute inset-0 w-full h-full object-cover z-0"
         />
         
         {/* Flash overlay */}
@@ -187,7 +219,7 @@ export default function CameraPage() {
       <div className="absolute bottom-0 left-0 right-0 z-10 pb-safe pb-8 pt-16 bg-gradient-to-t from-black via-black/80 to-transparent flex flex-col justify-center items-center gap-6">
         
         {/* Counter */}
-        <div className="font-sans font-bold text-cream/90 tracking-widest text-sm bg-black/40 px-4 py-1.5 rounded-full backdrop-blur border border-white/10">
+        <div className="font-sans font-bold text-cream/90 tracking-widest text-sm bg-black/40 px-4 py-1.5 rounded-full backdrop-blur border border-white/10 shadow-lg">
           {photoCount} / {MAX_PHOTOS} FOTOS
         </div>
 
@@ -195,7 +227,7 @@ export default function CameraPage() {
         <button
           onClick={takePhoto}
           disabled={photoCount >= MAX_PHOTOS || capturing}
-          className={`w-24 h-24 rounded-full border-4 flex items-center justify-center transition-all ${
+          className={`w-24 h-24 rounded-full border-4 flex items-center justify-center transition-all shadow-xl ${
             photoCount >= MAX_PHOTOS 
               ? 'border-forest-deep/50 bg-forest-deep/30 opacity-50' 
               : 'border-gold-warm bg-white/10 active:scale-95 shadow-[0_0_20px_rgba(216,182,90,0.4)]'

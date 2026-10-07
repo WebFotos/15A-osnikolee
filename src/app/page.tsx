@@ -52,7 +52,7 @@ export default function Home() {
       {/* Background illustration */}
       <div className="absolute inset-0 z-0 opacity-20 mask-image-b">
         <Image
-          src="/invitacion.jpg"
+          src="/hero.jpg"
           alt="Bosque Encantado Fondo"
           fill
           className="object-cover blur-[8px] scale-110"
@@ -65,7 +65,7 @@ export default function Home() {
         {/* Main Illustration Framed */}
         <div className="relative w-48 h-48 sm:w-56 sm:h-56 rounded-full p-1 bg-gradient-to-b from-gold-warm to-gold-soft shadow-[0_0_30px_rgba(216,182,90,0.3)] mb-4">
           <div className="w-full h-full rounded-full overflow-hidden border-4 border-forest-deep relative">
-            <Image src="/invitacion.jpg" alt="Princesa y el Sapo" fill className="object-cover" priority />
+            <Image src="/hero.jpg" alt="Princesa y el Sapo" fill className="object-cover" priority />
           </div>
           <div className="absolute -top-4 -right-4 w-8 h-8 bg-gold-warm rounded-full blur-xl opacity-50 animate-pulse" />
           <div className="absolute -bottom-4 -left-4 w-8 h-8 bg-gold-soft rounded-full blur-xl opacity-50 animate-pulse" />
