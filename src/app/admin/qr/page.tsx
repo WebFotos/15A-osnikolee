@@ -20,7 +20,7 @@ export default function QRPage() {
   if (loading) {
     return (
       <div className="flex min-h-[100dvh] items-center justify-center relative z-10">
-        <Loader2 className="w-8 h-8 animate-spin text-[#0A261D]" />
+        <Loader2 className="w-8 h-8 animate-spin text-cream" />
       </div>
     );
   }
@@ -33,15 +33,15 @@ export default function QRPage() {
 
       <Link 
         href={`/admin`}
-        className="absolute top-8 left-8 text-[#0A261D] hover:text-gold-warm print:hidden z-20"
+        className="absolute top-8 left-8 text-cream hover:text-gold-warm print:hidden z-20"
       >
         <ArrowLeft className="w-8 h-8" />
       </Link>
 
       <div className="z-10 bg-forest-deep/90 print:bg-white print:text-black border-2 border-gold-soft/30 print:border-black p-12 rounded-[3rem] backdrop-blur max-w-lg w-full text-center shadow-2xl flex flex-col items-center">
         
-        <p className="font-script text-4xl text-[#0A261D] print:text-black mb-2">Recuerdo de mis 15 años</p>
-        <h1 className="font-serif text-5xl font-bold text-[#0A261D] print:text-black mb-12">{EVENT_DETAILS.protagonist}</h1>
+        <p className="font-script text-4xl text-cream print:text-black mb-2">Recuerdo de mis 15 años</p>
+        <h1 className="font-serif text-5xl font-bold text-cream print:text-black mb-12">{EVENT_DETAILS.protagonist}</h1>
         
         <div className="bg-cream p-6 rounded-3xl shadow-xl mb-12 print:shadow-none print:p-0 print:mb-8">
           <QRCodeSVG 
@@ -57,7 +57,7 @@ export default function QRPage() {
           Escanea para entrar a la cámara
         </p>
         
-        <p className="font-sans text-[#0A261D]/50 print:text-black/50 text-sm">
+        <p className="font-sans text-cream/50 print:text-black/50 text-sm">
           {url}
         </p>
 

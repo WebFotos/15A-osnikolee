@@ -33,9 +33,9 @@ export default function AdminLoginPage({
     <div className="flex min-h-[100dvh] items-center justify-center p-6 relative z-10">
       <div className="w-full max-w-sm bg-forest-deep/80 border border-gold-soft/30 p-8 rounded-3xl shadow-2xl backdrop-blur-md text-center">
         <Lock className="w-12 h-12 text-gold-warm mx-auto mb-6 opacity-80" />
-        <h1 className="font-serif text-3xl font-bold text-[#0A261D] mb-2">Administración</h1>
-        <p className="font-sans text-[#0A261D]/80 text-sm mb-2">Recuerdo de mis 15 años</p>
-        <p className="font-sans text-[#0A261D]/80 text-sm mb-8">Introduce la contraseña de acceso</p>
+        <h1 className="font-serif text-3xl font-bold text-cream mb-2">Administración</h1>
+        <p className="font-sans text-cream/80 text-sm mb-2">Recuerdo de mis 15 años</p>
+        <p className="font-sans text-cream/80 text-sm mb-8">Introduce la contraseña de acceso</p>
 
         {searchParams.error && (
           <p className="font-sans text-red-400 text-sm mb-4">Contraseña incorrecta.</p>
@@ -47,7 +47,7 @@ export default function AdminLoginPage({
             name="password"
             placeholder="Contraseña"
             required
-            className="w-full bg-white/60 border border-gold-soft/20 rounded-xl px-4 py-4 text-center text-[#0A261D] focus:outline-none focus:border-gold-warm transition-colors font-sans"
+            className="w-full bg-black/40 border border-gold-soft/20 rounded-xl px-4 py-4 text-center text-cream focus:outline-none focus:border-gold-warm transition-colors font-sans"
           />
           <button
             type="submit"

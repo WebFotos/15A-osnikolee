@@ -103,7 +103,7 @@ export default function AdminDashboardPage() {
   if (loading) {
     return (
       <div className="flex min-h-[100dvh] items-center justify-center relative z-10">
-        <Loader2 className="w-8 h-8 animate-spin text-[#0A261D]" />
+        <Loader2 className="w-8 h-8 animate-spin text-cream" />
       </div>
     );
   }
@@ -112,12 +112,12 @@ export default function AdminDashboardPage() {
     <div className="min-h-[100dvh] p-6 safe-area-pt relative z-10">
       <div className="max-w-2xl mx-auto pt-4">
         <div className="flex items-center justify-between mb-8">
-          <Link href="/" className="inline-flex items-center text-[#0A261D] hover:text-gold-warm font-sans">
+          <Link href="/" className="inline-flex items-center text-cream hover:text-gold-warm font-sans">
             <ArrowLeft className="w-4 h-4 mr-2" /> Volver a la portada
           </Link>
           <button
             onClick={loadData}
-            className="w-10 h-10 rounded-full bg-forest-deep/50 border border-gold-soft/20 flex items-center justify-center text-[#0A261D] hover:text-gold-warm"
+            className="w-10 h-10 rounded-full bg-forest-deep/50 border border-gold-soft/20 flex items-center justify-center text-cream hover:text-gold-warm"
           >
             <RefreshCw size={16} />
           </button>
@@ -126,36 +126,36 @@ export default function AdminDashboardPage() {
         <div className="bg-forest-deep/80 border border-gold-soft/30 rounded-3xl p-8 mb-8 backdrop-blur shadow-xl">
           <div className="flex justify-between items-start mb-8">
             <div>
-              <p className="font-script text-2xl text-[#0A261D] mb-1">{EVENT_DETAILS.name}</p>
-              <h1 className="font-serif text-3xl font-bold mb-2 text-[#0A261D]">{EVENT_DETAILS.protagonist}</h1>
+              <p className="font-script text-2xl text-cream mb-1">{EVENT_DETAILS.name}</p>
+              <h1 className="font-serif text-3xl font-bold mb-2 text-cream">{EVENT_DETAILS.protagonist}</h1>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4 mb-8">
             <div className="bg-black/20 border border-gold-soft/20 p-6 rounded-2xl flex flex-col items-center justify-center">
-              <Camera className="w-8 h-8 text-[#0A261D] mb-3" />
-              <span className="font-serif text-4xl font-bold text-[#0A261D]">{photoCount}</span>
-              <span className="font-sans text-[#0A261D]/70 text-sm mt-1">Fotografías</span>
+              <Camera className="w-8 h-8 text-cream mb-3" />
+              <span className="font-serif text-4xl font-bold text-cream">{photoCount}</span>
+              <span className="font-sans text-cream/70 text-sm mt-1">Fotografías</span>
             </div>
             <div className="bg-black/20 border border-gold-soft/20 p-6 rounded-2xl flex flex-col items-center justify-center">
-              <Users className="w-8 h-8 text-[#0A261D] mb-3" />
-              <span className="font-serif text-4xl font-bold text-[#0A261D]">{sessionsData.length}</span>
-              <span className="font-sans text-[#0A261D]/70 text-sm mt-1">Invitados</span>
+              <Users className="w-8 h-8 text-cream mb-3" />
+              <span className="font-serif text-4xl font-bold text-cream">{sessionsData.length}</span>
+              <span className="font-sans text-cream/70 text-sm mt-1">Invitados</span>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Link
               href="/admin/qr"
-              className="w-full bg-forest-natural/40 border border-gold-soft/40 hover:bg-forest-natural/60 text-[#0A261D] font-sans font-bold py-4 rounded-2xl flex items-center justify-center transition-colors"
+              className="w-full bg-forest-natural/40 border border-gold-soft/40 hover:bg-forest-natural/60 text-cream font-sans font-bold py-4 rounded-2xl flex items-center justify-center transition-colors"
             >
-              <QrCode className="w-5 h-5 mr-3 text-[#0A261D]" /> QR DEL EVENTO
+              <QrCode className="w-5 h-5 mr-3 text-cream" /> QR DEL EVENTO
             </Link>
             <Link
               href="/nombre"
-              className="w-full bg-forest-natural/40 border border-gold-soft/40 hover:bg-forest-natural/60 text-[#0A261D] font-sans font-bold py-4 rounded-2xl flex items-center justify-center transition-colors"
+              className="w-full bg-forest-natural/40 border border-gold-soft/40 hover:bg-forest-natural/60 text-cream font-sans font-bold py-4 rounded-2xl flex items-center justify-center transition-colors"
             >
-              <Camera className="w-5 h-5 mr-3 text-[#0A261D]" /> IR A LA CÁMARA
+              <Camera className="w-5 h-5 mr-3 text-cream" /> IR A LA CÁMARA
             </Link>
           </div>
         </div>
@@ -171,7 +171,7 @@ export default function AdminDashboardPage() {
           <button
             onClick={handleDownloadZip}
             disabled={downloading}
-            className="w-full bg-forest-natural text-[#FFF7E6] hover:bg-forest-emerald font-sans font-bold py-5 rounded-2xl flex items-center justify-center transition-colors disabled:opacity-50 text-lg shadow-lg border border-[#0A261D]/30"
+            className="w-full bg-forest-natural text-cream hover:bg-forest-emerald font-sans font-bold py-5 rounded-2xl flex items-center justify-center transition-colors disabled:opacity-50 text-lg shadow-lg border border-gold-soft/30"
           >
             {downloading ? (
               <>
@@ -191,7 +191,7 @@ export default function AdminDashboardPage() {
         <h2 className="font-serif text-2xl font-bold mb-6 text-gold-warm">Sesiones de Invitados</h2>
         <div className="bg-forest-deep/80 border border-gold-soft/30 rounded-3xl p-6 backdrop-blur shadow-xl space-y-3">
           {sessionsData.length === 0 ? (
-            <div className="text-center text-[#0A261D]/50 py-4 font-sans text-sm">No hay invitados aún.</div>
+            <div className="text-center text-cream/50 py-4 font-sans text-sm">No hay invitados aún.</div>
           ) : (
             sessionsData.map((session) => (
               <div
@@ -199,14 +199,14 @@ export default function AdminDashboardPage() {
                 className="flex justify-between items-center border-b border-gold-soft/10 pb-3 last:border-0 last:pb-0"
               >
                 <div>
-                  <p className="font-sans font-bold text-[#0A261D] text-lg">{session.guest_name}</p>
-                  <p className="font-sans text-xs text-[#0A261D]/50">ID: {session.id.split("-")[0]}</p>
+                  <p className="font-sans font-bold text-cream text-lg">{session.guest_name}</p>
+                  <p className="font-sans text-xs text-cream/50">ID: {session.id.split("-")[0]}</p>
                 </div>
                 <div
                   className={`px-4 py-1.5 rounded-full text-sm font-bold font-sans ${
                     session.photo_count >= 24
                       ? "bg-gold-warm/20 text-gold-warm"
-                      : "bg-white/50 text-[#0A261D]/80"
+                      : "bg-black/40 text-cream/80"
                   }`}
                 >
                   {session.photo_count} / 24 fotos

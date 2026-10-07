@@ -17,10 +17,7 @@ export default function NombrePage() {
     setJoining(true);
     try {
       const session = await createSession(name.trim());
-
-      // Keep localStorage for backwards-compatible UI hints only — NOT for auth
       localStorage.setItem("cd_session", session.id);
-
       router.push("/camara");
     } catch (err) {
       console.error(err);
@@ -32,17 +29,17 @@ export default function NombrePage() {
   return (
     <div className="flex flex-col min-h-[100dvh] p-6 relative z-10">
       <div className="flex-1 flex flex-col items-center justify-center max-w-md w-full mx-auto">
-        <Sparkles className="w-12 h-12 text-[#0A261D] mb-6 opacity-80" />
+        <Sparkles className="w-12 h-12 text-gold-soft mb-6 opacity-80" />
 
-        <h1 className="font-serif text-3xl mb-2 text-center text-[#0A261D]">Antes de comenzar...</h1>
-        <p className="font-sans text-[#0A261D]/80 mb-10 text-center text-lg">¿Cómo te llamas?</p>
+        <h1 className="font-serif text-3xl mb-2 text-center text-cream">Antes de comenzar...</h1>
+        <p className="font-sans text-gold-soft/80 mb-10 text-center text-lg">¿Cómo te llamas?</p>
 
         <form onSubmit={handleJoin} className="w-full space-y-8">
           <div>
             <input
               type="text"
               placeholder="Escribe tu nombre (ej. Carlos)"
-              className="w-full bg-white/60 border border-[#0A261D]/20 rounded-2xl px-6 py-5 text-lg text-[#0A261D] placeholder-[#0A261D]/40 focus:outline-none focus:border-gold-warm focus:bg-white transition-all font-sans text-center backdrop-blur-sm shadow-[0_0_15px_rgba(0,0,0,0.2)]"
+              className="w-full bg-forest-deep/50 border border-gold-soft/30 rounded-2xl px-6 py-5 text-lg text-cream placeholder-cream/30 focus:outline-none focus:border-gold-warm focus:bg-forest-deep/80 transition-all font-sans text-center backdrop-blur-sm shadow-[0_0_15px_rgba(0,0,0,0.2)]"
               value={name}
               onChange={(e) => setName(e.target.value)}
               required

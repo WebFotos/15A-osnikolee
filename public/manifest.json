@@ -4,8 +4,8 @@
   "description": "Una cámara desechable para fiestas",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#e2f1e4",
-  "theme_color": "#e2f1e4",
+  "background_color": "#1A4D33",
+  "theme_color": "#1A4D33",
   "icons": [
     {
       "src": "/icon-192x192.png",

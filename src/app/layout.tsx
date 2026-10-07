@@ -7,7 +7,7 @@ const lato = Lato({ subsets: ["latin"], weight: ["400", "700"], variable: "--fon
 const greatVibes = Great_Vibes({ subsets: ["latin"], weight: ["400"], variable: "--font-vibes" });
 
 export const viewport: Viewport = {
-  themeColor: "#e2f1e4", // pastel
+  themeColor: "#1A4D33",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
@@ -31,7 +31,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es">
-      <body className={`${playfair.variable} ${lato.variable} ${greatVibes.variable} font-sans bg-[#e2f1e4] text-[#0A261D] min-h-[100dvh] safe-area-pt pb-safe flex flex-col overscroll-none`}>
+      <body className={`${playfair.variable} ${lato.variable} ${greatVibes.variable} font-sans bg-forest-deep text-cream min-h-[100dvh] safe-area-pt pb-safe flex flex-col overscroll-none`}>
         <div className="forest-bg" />
         {children}
       </body>

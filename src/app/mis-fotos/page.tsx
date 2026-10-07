@@ -82,18 +82,18 @@ export default function MisFotosPage() {
       <header className="flex items-center justify-between mb-8">
         <button
           onClick={() => router.push(`/camara`)}
-          className="w-12 h-12 rounded-full bg-white/60 border border-gold-soft/30 flex items-center justify-center backdrop-blur text-[#0A261D]"
+          className="w-12 h-12 rounded-full bg-forest-deep/50 border border-gold-soft/30 flex items-center justify-center backdrop-blur text-cream"
         >
           <ArrowLeft size={24} />
         </button>
-        <h1 className="font-serif text-2xl font-bold text-[#0A261D]">Mis fotografías</h1>
+        <h1 className="font-serif text-2xl font-bold text-cream">Mis fotografías</h1>
         <div className="w-12" />
       </header>
 
       {photos.length === 0 ? (
         <div className="flex-1 flex flex-col items-center justify-center text-center">
-          <ImageIcon className="w-16 h-16 text-[#0A261D]/50 mb-4" />
-          <p className="font-sans text-[#0A261D]/70 text-lg">Aún no has tomado ninguna fotografía.</p>
+          <ImageIcon className="w-16 h-16 text-cream/50 mb-4" />
+          <p className="font-sans text-cream/70 text-lg">Aún no has tomado ninguna fotografía.</p>
           <button
             onClick={() => router.push("/camara")}
             className="mt-8 btn-gold px-8 py-3 rounded-2xl font-bold font-sans"
@@ -103,7 +103,7 @@ export default function MisFotosPage() {
         </div>
       ) : (
         <>
-          <p className="font-sans text-[#0A261D]/70 text-sm mb-4 text-right">
+          <p className="font-sans text-cream/70 text-sm mb-4 text-right">
             {photos.length} / 24 fotos
           </p>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -111,7 +111,7 @@ export default function MisFotosPage() {
               <div
                 key={photo.id}
                 onClick={() => openPhoto(index)}
-                className="aspect-[3/4] relative bg-white/60 rounded-xl overflow-hidden border border-gold-soft/20 shadow-md cursor-pointer hover:border-gold-warm hover:scale-[1.02] transition-all duration-200"
+                className="aspect-[3/4] relative bg-forest-deep/50 rounded-xl overflow-hidden border border-gold-soft/20 shadow-md cursor-pointer hover:border-gold-warm hover:scale-[1.02] transition-all duration-200"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
@@ -126,8 +126,8 @@ export default function MisFotosPage() {
 
           {photos.length > 0 && (
             <div className="mt-10 text-center pb-8">
-              <p className="font-serif text-[#0A261D] text-base mb-1">Tus recuerdos están seguros ✨</p>
-              <p className="font-sans text-[#0A261D]/50 text-sm">Toca cualquier foto para verla en grande.</p>
+              <p className="font-serif text-cream text-base mb-1">Tus recuerdos están seguros ✨</p>
+              <p className="font-sans text-cream/50 text-sm">Toca cualquier foto para verla en grande.</p>
             </div>
           )}
         </>
