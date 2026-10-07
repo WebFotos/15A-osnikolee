@@ -28,7 +28,7 @@ export interface PhotoWithUrl extends Photo {
 
 export const EVENT_DETAILS = {
   name: "Recuerdo de mis 15 años",
-  protagonist: "Nikolee Valezka",
+  protagonist: "Nikolee Valeska",
   location: "Sevilla",
   date: "17/10/2026"
 };

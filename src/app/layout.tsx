@@ -17,7 +17,7 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: "Recuerdo de mis 15 años",
-  description: "Cámara y álbum de los 15 años de Nikolee Valezka.",
+  description: "Cámara y álbum de los 15 años de Nikolee Valeska.",
   manifest: "/manifest.json",
 };
 
