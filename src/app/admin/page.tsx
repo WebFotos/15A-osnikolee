@@ -6,6 +6,7 @@ import { EVENT_DETAILS } from "@/lib/types";
 import { Loader2, QrCode, Camera, Users, ArrowLeft, RefreshCw, Images, Download } from "lucide-react";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
+import WelcomeVideoAdmin from "./WelcomeVideoAdmin";
 
 interface SessionRow {
   id: string;
@@ -160,7 +161,7 @@ export default function AdminDashboardPage() {
           </div>
         </div>
 
-        <h2 className="font-serif text-2xl font-bold mb-6 text-gold-warm">Control del Álbum</h2>
+        <WelcomeVideoAdmin />`n`n        <h2 className="font-serif text-2xl font-bold mb-6 text-gold-warm">Control del Álbum</h2>
         <div className="space-y-4 mb-12">
           <Link
             href="/admin/album"
