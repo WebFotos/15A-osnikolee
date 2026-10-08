@@ -13,12 +13,8 @@ function isAdminAuthenticated(): boolean {
   return verifyAdminToken(token);
 }
 
-/**
- * Ensures the bucket exists with the correct MIME type configuration.
- * Returns null on success, or an error string describing the failure stage.
- */
+/** Ensures bucket exists with correct MIME types. Returns null on success or error stage string. */
 async function ensureBucket(): Promise<string | null> {
-  // ── LIST_BUCKETS ──────────────────────────────────────────────────────────
   const { data: buckets, error: listError } = await supabaseAdmin.storage.listBuckets();
 
   if (listError) {
@@ -33,12 +29,10 @@ async function ensureBucket(): Promise<string | null> {
   const exists = (buckets ?? []).some(b => b.name === BUCKET_NAME);
 
   if (!exists) {
-    // ── CREATE_BUCKET ───────────────────────────────────────────────────────
     const { error: createError } = await supabaseAdmin.storage.createBucket(BUCKET_NAME, {
       public: true,
       allowedMimeTypes: ['video/mp4', 'video/webm', 'video/quicktime', 'application/json'],
     });
-
     if (createError) {
       console.error('[CREATE_BUCKET] FAILED:', {
         message: createError.message,
@@ -47,15 +41,12 @@ async function ensureBucket(): Promise<string | null> {
       });
       return 'CREATE_BUCKET';
     }
-
-    console.log('[CREATE_BUCKET] OK — bucket created');
+    console.log('[CREATE_BUCKET] OK');
   } else {
-    // ── UPDATE_BUCKET ───────────────────────────────────────────────────────
     const { error: updateError } = await supabaseAdmin.storage.updateBucket(BUCKET_NAME, {
       public: true,
       allowedMimeTypes: ['video/mp4', 'video/webm', 'video/quicktime', 'application/json'],
     });
-
     if (updateError) {
       console.error('[UPDATE_BUCKET] FAILED:', {
         message: updateError.message,
@@ -64,21 +55,19 @@ async function ensureBucket(): Promise<string | null> {
       });
       return 'UPDATE_BUCKET';
     }
-
-    console.log('[UPDATE_BUCKET] OK — MIME types updated');
+    console.log('[UPDATE_BUCKET] OK');
   }
 
-  return null; // success
+  return null;
 }
 
+// ─── GET: fetch current config ────────────────────────────────────────────────
 export async function GET() {
   if (!isAdminAuthenticated()) return NextResponse.json({ message: 'No autorizado' }, { status: 401 });
 
   try {
     const { data, error } = await supabaseAdmin.storage.from(BUCKET_NAME).download(CONFIG_PATH);
-    if (error || !data) {
-      return NextResponse.json({ active: false, videoUrl: null });
-    }
+    if (error || !data) return NextResponse.json({ active: false, videoUrl: null });
     const text = await data.text();
     return NextResponse.json(JSON.parse(text));
   } catch {
@@ -86,81 +75,54 @@ export async function GET() {
   }
 }
 
+// ─── POST: actions ────────────────────────────────────────────────────────────
 export async function POST(req: NextRequest) {
   if (!isAdminAuthenticated()) return NextResponse.json({ message: 'No autorizado' }, { status: 401 });
 
-  // Log Supabase URL (safe — not the key)
   console.log('[admin/welcome-video] Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'MISSING');
 
   try {
     const formData = await req.formData();
     const action = formData.get('action') as string;
 
-    if (action === 'toggle') {
-      const active = formData.get('active') === 'true';
-      const { data: configData } = await supabaseAdmin.storage.from(BUCKET_NAME).download(CONFIG_PATH);
-      if (!configData) return NextResponse.json({ message: 'No hay configuracion' }, { status: 404 });
+    // ── ACTION: get-upload-url ──────────────────────────────────────────────
+    // Returns a short-lived signed URL so the browser can upload DIRECTLY to
+    // Supabase Storage, bypassing Vercel's 4.5 MB function body limit.
+    if (action === 'get-upload-url') {
+      const ext = (formData.get('ext') as string) || 'mp4';
 
-      const config = JSON.parse(await configData.text());
-      config.active = active;
-      await supabaseAdmin.storage
-        .from(BUCKET_NAME)
-        .upload(CONFIG_PATH, JSON.stringify(config), { upsert: true, contentType: 'application/json' });
-      return NextResponse.json(config);
-    }
-
-    if (action === 'delete') {
-      const { data: configData } = await supabaseAdmin.storage.from(BUCKET_NAME).download(CONFIG_PATH);
-      if (configData) {
-        const config = JSON.parse(await configData.text());
-        if (config.videoPath) {
-          await supabaseAdmin.storage.from(BUCKET_NAME).remove([config.videoPath]);
-        }
-      }
-      await supabaseAdmin.storage.from(BUCKET_NAME).remove([CONFIG_PATH]);
-      return NextResponse.json({ active: false, videoUrl: null });
-    }
-
-    if (action === 'upload') {
-      const video = formData.get('video') as File;
-      if (!video || !video.type.startsWith('video/')) {
-        return NextResponse.json({ message: 'Archivo de video no valido' }, { status: 400 });
-      }
-      if (video.size > 50 * 1024 * 1024) {
-        return NextResponse.json({ message: 'El video es demasiado grande (max 50MB)' }, { status: 400 });
-      }
-
-      // ── ENSURE BUCKET ────────────────────────────────────────────────────
       const bucketError = await ensureBucket();
       if (bucketError) {
         return NextResponse.json(
-          { message: `Error de almacenamiento (${bucketError}). Contacta al administrador.` },
+          { message: `Error de almacenamiento (${bucketError})` },
           { status: 500 }
         );
       }
 
-      // ── UPLOAD_VIDEO ─────────────────────────────────────────────────────
-      const fileExt = video.name.split('.').pop() || 'mp4';
-      const videoPath = `${VIDEO_PATH_PREFIX}_${Date.now()}.${fileExt}`;
-      const arrayBuffer = await video.arrayBuffer();
-      const buffer = Buffer.from(arrayBuffer);
+      const videoPath = `${VIDEO_PATH_PREFIX}_${Date.now()}.${ext}`;
 
-      console.log('[UPLOAD_VIDEO] Attempting upload:', { videoPath, contentType: video.type, sizeBytes: buffer.length });
-
-      const { error: uploadError } = await supabaseAdmin.storage
+      const { data, error } = await supabaseAdmin.storage
         .from(BUCKET_NAME)
-        .upload(videoPath, buffer, { contentType: video.type, upsert: true });
+        .createSignedUploadUrl(videoPath);
 
-      if (uploadError) {
-        console.error('[UPLOAD_VIDEO] FAILED:', {
-          message: uploadError.message,
-          name: uploadError.name,
-          statusCode: (uploadError as any).statusCode ?? (uploadError as any).status ?? 'unknown',
-        });
-        return NextResponse.json({ message: 'Error al subir el video' }, { status: 500 });
+      if (error || !data) {
+        console.error('[GET_UPLOAD_URL] FAILED:', error);
+        return NextResponse.json({ message: 'Error generando URL de subida' }, { status: 500 });
       }
 
-      console.log('[UPLOAD_VIDEO] OK');
+      console.log('[GET_UPLOAD_URL] OK — videoPath:', videoPath);
+
+      return NextResponse.json({ signedUrl: data.signedUrl, token: data.token, videoPath });
+    }
+
+    // ── ACTION: confirm-upload ──────────────────────────────────────────────
+    // Called after the browser has uploaded the video directly to Supabase.
+    // Saves the config JSON and deletes the old video.
+    if (action === 'confirm-upload') {
+      const videoPath = formData.get('videoPath') as string;
+      if (!videoPath) {
+        return NextResponse.json({ message: 'videoPath requerido' }, { status: 400 });
+      }
 
       const { data: publicUrlData } = supabaseAdmin.storage.from(BUCKET_NAME).getPublicUrl(videoPath);
       const videoUrl = publicUrlData.publicUrl;
@@ -168,16 +130,17 @@ export async function POST(req: NextRequest) {
       // Delete old video if exists
       const { data: configData } = await supabaseAdmin.storage.from(BUCKET_NAME).download(CONFIG_PATH);
       if (configData) {
-        const oldConfig = JSON.parse(await configData.text());
-        if (oldConfig.videoPath) {
-          await supabaseAdmin.storage.from(BUCKET_NAME).remove([oldConfig.videoPath]);
-        }
+        try {
+          const oldConfig = JSON.parse(await configData.text());
+          if (oldConfig.videoPath && oldConfig.videoPath !== videoPath) {
+            await supabaseAdmin.storage.from(BUCKET_NAME).remove([oldConfig.videoPath]);
+          }
+        } catch { /* ignore JSON parse errors */ }
       }
 
-      // ── UPLOAD_CONFIG ────────────────────────────────────────────────────
       const config = { active: true, videoUrl, videoPath, updatedAt: new Date().toISOString() };
 
-      console.log('[UPLOAD_CONFIG] Attempting config save:', CONFIG_PATH);
+      console.log('[UPLOAD_CONFIG] Saving config:', CONFIG_PATH);
 
       const { error: configError } = await supabaseAdmin.storage
         .from(BUCKET_NAME)
@@ -195,6 +158,35 @@ export async function POST(req: NextRequest) {
       console.log('[UPLOAD_CONFIG] OK');
 
       return NextResponse.json(config);
+    }
+
+    // ── ACTION: toggle ──────────────────────────────────────────────────────
+    if (action === 'toggle') {
+      const active = formData.get('active') === 'true';
+      const { data: configData } = await supabaseAdmin.storage.from(BUCKET_NAME).download(CONFIG_PATH);
+      if (!configData) return NextResponse.json({ message: 'No hay configuracion' }, { status: 404 });
+
+      const config = JSON.parse(await configData.text());
+      config.active = active;
+      await supabaseAdmin.storage
+        .from(BUCKET_NAME)
+        .upload(CONFIG_PATH, JSON.stringify(config), { upsert: true, contentType: 'application/json' });
+      return NextResponse.json(config);
+    }
+
+    // ── ACTION: delete ──────────────────────────────────────────────────────
+    if (action === 'delete') {
+      const { data: configData } = await supabaseAdmin.storage.from(BUCKET_NAME).download(CONFIG_PATH);
+      if (configData) {
+        try {
+          const config = JSON.parse(await configData.text());
+          if (config.videoPath) {
+            await supabaseAdmin.storage.from(BUCKET_NAME).remove([config.videoPath]);
+          }
+        } catch { /* ignore */ }
+      }
+      await supabaseAdmin.storage.from(BUCKET_NAME).remove([CONFIG_PATH]);
+      return NextResponse.json({ active: false, videoUrl: null });
     }
 
     return NextResponse.json({ message: 'Accion invalida' }, { status: 400 });
