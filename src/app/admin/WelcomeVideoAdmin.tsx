@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Loader2, Video, Upload, Trash2, Check, X } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 
 export default function WelcomeVideoAdmin() {
   const [loading, setLoading] = useState(true);
@@ -59,21 +60,17 @@ export default function WelcomeVideoAdmin() {
         return;
       }
 
-      const { signedUrl, videoPath } = await urlRes.json();
+      const { token, videoPath } = await urlRes.json();
 
-      // ── STEP 2: Upload the file DIRECTLY to Supabase (bypass Vercel limit) ─
-      setProgress("Subiendo vídeo directamente a Supabase…");
+      setProgress("Subiendo video directamente a Supabase...");
 
-      const uploadRes = await fetch(signedUrl, {
-        method: "PUT",
-        headers: { "Content-Type": file.type },
-        body: file,
-      });
+      const { error: uploadError } = await supabase.storage
+        .from("event_assets")
+        .uploadToSignedUrl(videoPath, token, file);
 
-      if (!uploadRes.ok) {
-        const text = await uploadRes.text();
-        console.error("Direct upload error:", uploadRes.status, text);
-        alert("Error al subir el vídeo al almacenamiento.");
+      if (uploadError) {
+        console.error("Direct upload error:", uploadError);
+        alert("Error al subir el video al almacenamiento.");
         return;
       }
 
