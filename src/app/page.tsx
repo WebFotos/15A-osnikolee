@@ -53,6 +53,7 @@ export default function Home() {
           
           if (videoData.active && videoData.videoUrl && !hasPlayed) {
             setWelcomeUrl(videoData.videoUrl);
+            setShowWelcome(true); // show immediately — muted+autoPlay works on mobile without gesture
           }
         }
       } catch (err) {
@@ -67,25 +68,9 @@ export default function Home() {
 
   const handleEnterClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    if (navigatingRef.current) return; // prevent double click
-    if (welcomeUrl) {
-      setIsMuted(true); // reset to muted so autoplay works
-      setNeedsManualPlay(false);
-      setShowWelcome(true);
-      // play() is triggered by the autoPlay attribute — this is just a fallback
-      // called inside the same user-gesture stack
-      setTimeout(() => {
-        if (videoRef.current) {
-          videoRef.current.play().catch((err) => {
-            console.error("Autoplay prevented:", err);
-            setNeedsManualPlay(true);
-          });
-        }
-      }, 50);
-    } else {
-      navigatingRef.current = true;
-      router.push("/nombre");
-    }
+    if (navigatingRef.current) return;
+    navigatingRef.current = true;
+    router.push("/nombre");
   };
 
   const closeWelcomeVideo = () => {
