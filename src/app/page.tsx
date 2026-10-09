@@ -6,7 +6,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { EVENT_DETAILS } from "@/lib/types";
 import { clearSession } from "@/lib/storage";
-import { Camera, RefreshCw, Play } from "lucide-react";
+import { Camera, RefreshCw, Play, Volume2, VolumeX } from "lucide-react";
 
 interface SessionInfo {
   id: string;
@@ -25,6 +25,8 @@ export default function Home() {
   const [welcomeUrl, setWelcomeUrl] = useState<string | null>(null);
   const [videoConfigFetched, setVideoConfigFetched] = useState(false);
   const [needsManualPlay, setNeedsManualPlay] = useState(false);
+  const [isMuted, setIsMuted] = useState(true); // start muted for autoplay compat
+  const navigatingRef = useRef(false); // prevent double navigation
   
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -65,9 +67,13 @@ export default function Home() {
 
   const handleEnterClick = (e: React.MouseEvent) => {
     e.preventDefault();
+    if (navigatingRef.current) return; // prevent double click
     if (welcomeUrl) {
+      setIsMuted(true); // reset to muted so autoplay works
+      setNeedsManualPlay(false);
       setShowWelcome(true);
-      // Try to auto-play since it's a direct user interaction
+      // play() is triggered by the autoPlay attribute — this is just a fallback
+      // called inside the same user-gesture stack
       setTimeout(() => {
         if (videoRef.current) {
           videoRef.current.play().catch((err) => {
@@ -77,11 +83,14 @@ export default function Home() {
         }
       }, 50);
     } else {
+      navigatingRef.current = true;
       router.push("/nombre");
     }
   };
 
   const closeWelcomeVideo = () => {
+    if (navigatingRef.current) return; // prevent double navigation
+    navigatingRef.current = true;
     sessionStorage.setItem("welcome_video_played", "true");
     setShowWelcome(false);
     router.push("/nombre");
@@ -92,6 +101,13 @@ export default function Home() {
     if (videoRef.current) {
       videoRef.current.play().catch(console.error);
     }
+  };
+
+  const handleToggleAudio = () => {
+    if (!videoRef.current) return;
+    const newMuted = !videoRef.current.muted;
+    videoRef.current.muted = newMuted;
+    setIsMuted(newMuted);
   };
 
   const handleNewGuest = async () => {
@@ -108,21 +124,27 @@ export default function Home() {
             ref={videoRef}
             src={welcomeUrl}
             className="w-full h-full object-cover"
+            autoPlay
             playsInline
-            muted
+            muted={isMuted}
             onEnded={closeWelcomeVideo}
-            onError={closeWelcomeVideo}
+            onError={(e) => {
+              console.error("Video error:", e);
+              closeWelcomeVideo();
+            }}
           />
-          
+
+          {/* Manual play overlay — only when autoplay was blocked */}
           {needsManualPlay && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm z-10">
-              <button 
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm z-20">
+              <button
+                aria-label="Reproducir vídeo"
                 onClick={handleManualPlay}
                 className="w-20 h-20 bg-gold-warm/90 rounded-full flex items-center justify-center text-forest-deep shadow-[0_0_30px_rgba(216,182,90,0.5)] transition-transform hover:scale-110 active:scale-95"
               >
                 <Play className="w-10 h-10 ml-2" />
               </button>
-              <button 
+              <button
                 onClick={closeWelcomeVideo}
                 className="mt-8 text-cream/70 font-sans border-b border-cream/30 pb-1"
               >
@@ -130,15 +152,37 @@ export default function Home() {
               </button>
             </div>
           )}
-          
-          {/* Oculto, pero permite saltar si se atasca */}
+
+          {/* Audio toggle button — always visible during playback */}
           {!needsManualPlay && (
-             <button 
-               onClick={closeWelcomeVideo}
-               className="absolute top-6 right-6 text-cream/50 hover:text-cream text-sm font-sans z-10 p-2"
-             >
-               Saltar
-             </button>
+            <button
+              aria-label={isMuted ? "Activar sonido" : "Silenciar"}
+              onClick={handleToggleAudio}
+              className="absolute bottom-8 right-6 z-10 flex items-center gap-2 bg-black/50 backdrop-blur-sm text-cream border border-cream/20 rounded-full px-4 py-2 text-sm font-sans hover:bg-black/70 transition-colors"
+            >
+              {isMuted ? (
+                <>
+                  <VolumeX className="w-4 h-4 flex-shrink-0" />
+                  <span>Activar sonido</span>
+                </>
+              ) : (
+                <>
+                  <Volume2 className="w-4 h-4 flex-shrink-0" />
+                  <span>Silenciar</span>
+                </>
+              )}
+            </button>
+          )}
+
+          {/* Skip button */}
+          {!needsManualPlay && (
+            <button
+              aria-label="Saltar vídeo"
+              onClick={closeWelcomeVideo}
+              className="absolute top-6 right-6 text-cream/50 hover:text-cream text-sm font-sans z-10 p-2 transition-colors"
+            >
+              Saltar
+            </button>
           )}
         </div>
       )}
