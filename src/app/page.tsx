@@ -6,7 +6,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { EVENT_DETAILS } from "@/lib/types";
 import { clearSession } from "@/lib/storage";
-import { Camera, RefreshCw } from "lucide-react";
+import { Camera, RefreshCw, Play } from "lucide-react";
 
 interface SessionInfo {
   id: string;
@@ -23,8 +23,10 @@ export default function Home() {
   // Welcome Video state
   const [showWelcome, setShowWelcome] = useState(false);
   const [welcomeUrl, setWelcomeUrl] = useState<string | null>(null);
+  const [videoConfigFetched, setVideoConfigFetched] = useState(false);
+  const [needsManualPlay, setNeedsManualPlay] = useState(false);
+  
   const videoRef = useRef<HTMLVideoElement>(null);
-  const fallbackTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     async function initData() {
@@ -49,29 +51,47 @@ export default function Home() {
           
           if (videoData.active && videoData.videoUrl && !hasPlayed) {
             setWelcomeUrl(videoData.videoUrl);
-            setShowWelcome(true);
           }
         }
       } catch (err) {
         setSession(null);
       } finally {
         setLoading(false);
+        setVideoConfigFetched(true);
       }
     }
     initData();
   }, []);
 
-  const closeWelcomeVideo = () => {
-    if (fallbackTimeoutRef.current) clearTimeout(fallbackTimeoutRef.current);
-    sessionStorage.setItem("welcome_video_played", "true");
-    setShowWelcome(false);
+  const handleEnterClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (welcomeUrl) {
+      setShowWelcome(true);
+      // Try to auto-play since it's a direct user interaction
+      setTimeout(() => {
+        if (videoRef.current) {
+          videoRef.current.play().catch((err) => {
+            console.error("Autoplay prevented:", err);
+            setNeedsManualPlay(true);
+          });
+        }
+      }, 50);
+    } else {
+      router.push("/nombre");
+    }
   };
 
-  const handleVideoPlay = () => {
-    // Safety fallback: if video doesn't trigger 'ended' after 16 seconds
-    fallbackTimeoutRef.current = setTimeout(() => {
-      closeWelcomeVideo();
-    }, 16000);
+  const closeWelcomeVideo = () => {
+    sessionStorage.setItem("welcome_video_played", "true");
+    setShowWelcome(false);
+    router.push("/nombre");
+  };
+
+  const handleManualPlay = () => {
+    setNeedsManualPlay(false);
+    if (videoRef.current) {
+      videoRef.current.play().catch(console.error);
+    }
   };
 
   const handleNewGuest = async () => {
@@ -83,19 +103,43 @@ export default function Home() {
   return (
     <>
       {showWelcome && welcomeUrl && (
-        <div className="fixed inset-0 z-[100] bg-black flex items-center justify-center overflow-hidden">
+        <div className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center overflow-hidden">
           <video
             ref={videoRef}
             src={welcomeUrl}
             className="w-full h-full object-cover"
-            autoPlay
             playsInline
             muted
-            controls={false}
-            onPlay={handleVideoPlay}
             onEnded={closeWelcomeVideo}
             onError={closeWelcomeVideo}
           />
+          
+          {needsManualPlay && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm z-10">
+              <button 
+                onClick={handleManualPlay}
+                className="w-20 h-20 bg-gold-warm/90 rounded-full flex items-center justify-center text-forest-deep shadow-[0_0_30px_rgba(216,182,90,0.5)] transition-transform hover:scale-110 active:scale-95"
+              >
+                <Play className="w-10 h-10 ml-2" />
+              </button>
+              <button 
+                onClick={closeWelcomeVideo}
+                className="mt-8 text-cream/70 font-sans border-b border-cream/30 pb-1"
+              >
+                Saltar vídeo
+              </button>
+            </div>
+          )}
+          
+          {/* Oculto, pero permite saltar si se atasca */}
+          {!needsManualPlay && (
+             <button 
+               onClick={closeWelcomeVideo}
+               className="absolute top-6 right-6 text-cream/50 hover:text-cream text-sm font-sans z-10 p-2"
+             >
+               Saltar
+             </button>
+          )}
         </div>
       )}
 
@@ -173,14 +217,15 @@ export default function Home() {
               </div>
             ) : (
               <>
-                <Link
-                  href="/nombre"
-                  className="w-full btn-gold text-forest-deep font-bold py-5 rounded-2xl text-lg flex items-center justify-center gap-3 transition-transform relative overflow-hidden group"
+                <button
+                  onClick={handleEnterClick}
+                  disabled={!videoConfigFetched}
+                  className="w-full btn-gold text-forest-deep font-bold py-5 rounded-2xl text-lg flex items-center justify-center gap-3 transition-transform relative overflow-hidden group disabled:opacity-50"
                 >
                   <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-in-out" />
                   <Camera size={24} className="relative z-10" />
                   <span className="relative z-10">ENTRAR A LA CÁMARA</span>
-                </Link>
+                </button>
 
                 <p className="text-cream/50 text-sm font-sans px-4">
                   Captura los mejores momentos de esta noche mágica.
