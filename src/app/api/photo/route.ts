@@ -113,3 +113,96 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ message: 'Error interno del servidor' }, { status: 500 });
   }
 }
+
+// DELETE /api/photo — Delete a photo belonging strictly to the current session
+export async function DELETE(req: NextRequest) {
+  try {
+    // 1. Get session from cookie
+    const sessionId = await getVerifiedSessionId();
+    if (!sessionId) {
+      return NextResponse.json({ message: 'Sin sesión activa' }, { status: 401 });
+    }
+
+    // 2. Check if event is already closed / revealed by admin
+    const { data: event, error: eventError } = await supabaseAdmin
+      .from('events')
+      .select('status')
+      .eq('id', EVENT_ID)
+      .single();
+
+    if (eventError || !event) {
+      console.error('[DELETE /api/photo] Event error:', eventError);
+      return NextResponse.json({ message: 'Error al verificar estado del evento' }, { status: 500 });
+    }
+
+    if (event.status === 'REVEALED') {
+      return NextResponse.json({ 
+        message: 'El álbum ya ha sido cerrado por el administrador. Las fotografías ya no se pueden eliminar.' 
+      }, { status: 403 });
+    }
+
+    // 3. Extract photo ID from query param or json body
+    const url = new URL(req.url);
+    let photoId = url.searchParams.get('id');
+    if (!photoId) {
+      try {
+        const body = await req.json();
+        photoId = body?.id || body?.photoId;
+      } catch {
+        // ignore json parse error
+      }
+    }
+
+    if (!photoId) {
+      return NextResponse.json({ message: 'ID de fotografía requerido' }, { status: 400 });
+    }
+
+    // 4. Find the photo and verify ownership
+    const { data: photo, error: photoError } = await supabaseAdmin
+      .from('photos')
+      .select('id, session_id, storage_path')
+      .eq('id', photoId)
+      .single();
+
+    if (photoError || !photo) {
+      return NextResponse.json({ message: 'Fotografía no encontrada' }, { status: 404 });
+    }
+
+    // 5. SECURITY: Only the owner session can delete their own photo
+    if (photo.session_id !== sessionId) {
+      return NextResponse.json({ message: 'No tienes permiso para eliminar esta fotografía' }, { status: 403 });
+    }
+
+    // 6. Delete from database (atomic)
+    const { error: dbDeleteError } = await supabaseAdmin
+      .from('photos')
+      .delete()
+      .eq('id', photoId)
+      .eq('session_id', sessionId);
+
+    if (dbDeleteError) {
+      console.error('[DELETE /api/photo] DB delete error:', dbDeleteError);
+      return NextResponse.json({ message: 'Error al eliminar la fotografía de la base de datos' }, { status: 500 });
+    }
+
+    // 7. Remove physical file from Supabase Storage
+    if (photo.storage_path) {
+      const { error: storageError } = await supabaseAdmin.storage
+        .from('event_photos')
+        .remove([photo.storage_path]);
+      
+      if (storageError) {
+        console.warn('[DELETE /api/photo] Storage remove warning:', storageError);
+      }
+    }
+
+    return NextResponse.json({ 
+      success: true, 
+      message: 'Fotografía eliminada correctamente' 
+    });
+  } catch (err) {
+    console.error('[DELETE /api/photo] Unexpected error:', err);
+    return NextResponse.json({ message: 'Error interno del servidor' }, { status: 500 });
+  }
+}
+

@@ -80,6 +80,40 @@ export const getSessionPhotos = async (_sessionId?: string): Promise<PhotoWithUr
 
 export const getPhotosBySession = getSessionPhotos;
 
+/**
+ * Deletes a photo belonging strictly to the current session.
+ * Fails if the album has been closed/revealed by the admin.
+ */
+export const deletePhoto = async (photoId: string): Promise<{ success: boolean; message: string }> => {
+  const res = await fetch(`/api/photo?id=${encodeURIComponent(photoId)}`, {
+    method: 'DELETE',
+  });
+  return handleResponse(res);
+};
+
+/**
+ * Downloads an individual photo directly to the guest's phone or computer.
+ */
+export const downloadPhoto = async (photoUrl: string, fileName: string = 'mi-foto-15nikolee.jpg'): Promise<void> => {
+  try {
+    const res = await fetch(photoUrl);
+    if (!res.ok) throw new Error('Error al obtener la imagen');
+    const blob = await res.blob();
+    const { saveAs } = await import('file-saver');
+    saveAs(blob, fileName);
+  } catch (err) {
+    console.warn('Fallback para descarga de imagen:', err);
+    const a = document.createElement('a');
+    a.href = photoUrl;
+    a.download = fileName;
+    a.target = '_blank';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+};
+
+
 // --- Event Status ---
 
 export const getEventStatus = async (): Promise<EventStatus> => {

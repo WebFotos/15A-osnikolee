@@ -26,6 +26,7 @@ export default function CameraPage() {
   const [zoomValue, setZoomValue] = useState<number>(1);
   const [digitalZoom, setDigitalZoom] = useState<number>(1);
   const [videoTrack, setVideoTrack] = useState<MediaStreamTrack | null>(null);
+  const [lastPhotoUrl, setLastPhotoUrl] = useState<string | null>(null);
 
   const sessionId = typeof window !== "undefined" ? localStorage.getItem("cd_session") : null;
 
@@ -38,11 +39,20 @@ export default function CameraPage() {
       try {
         const photos = await getSessionPhotos(sessionId!);
         setPhotoCount(photos.length);
+        if (photos.length > 0) {
+          setLastPhotoUrl(photos[0].url);
+        } else {
+          setLastPhotoUrl(null);
+        }
       } catch (err) {
         console.error(err);
       }
     }
     checkStatus();
+
+    const handleFocus = () => checkStatus();
+    window.addEventListener("focus", handleFocus);
+    return () => window.removeEventListener("focus", handleFocus);
   }, [router, sessionId]);
 
   const startCamera = useCallback(async (facing: "environment" | "user") => {
@@ -253,8 +263,13 @@ export default function CameraPage() {
       const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
 
       try {
-        await savePhoto(sessionId, dataUrl);
+        const saved = await savePhoto(sessionId, dataUrl);
         setPhotoCount((prev) => prev + 1);
+        if (saved?.url) {
+          setLastPhotoUrl(saved.url);
+        } else {
+          setLastPhotoUrl(dataUrl);
+        }
       } catch (err: any) {
         alert("Error al guardar: " + (err.message || err.toString() || "Error de red/memoria"));
       }
@@ -379,22 +394,61 @@ export default function CameraPage() {
           {photoCount} / {MAX_PHOTOS} FOTOS
         </div>
 
-        {/* Shutter Button */}
-        <button
-          onClick={takePhoto}
-          disabled={photoCount >= MAX_PHOTOS || capturing}
-          className={`w-24 h-24 rounded-full border-4 flex items-center justify-center transition-all shadow-xl pointer-events-auto ${
-            photoCount >= MAX_PHOTOS
-              ? "border-forest-deep/50 bg-forest-deep/30 opacity-50"
-              : "border-gold-warm bg-white/10 active:scale-95 shadow-[0_0_20px_rgba(216,182,90,0.4)]"
-          }`}
-        >
-          <div
-            className={`w-20 h-20 rounded-full transition-colors ${
-              photoCount >= MAX_PHOTOS ? "bg-forest-deep/50" : "bg-cream"
+        {/* Bottom Shutter Row with last photo preview & camera switch */}
+        <div className="w-full max-w-xs px-6 flex items-center justify-between pointer-events-auto">
+          {/* Quick Preview Thumbnail */}
+          <button
+            onClick={() => router.push("/mis-fotos")}
+            className="w-14 h-14 rounded-2xl border-2 border-gold-soft/50 overflow-hidden bg-forest-deep/80 backdrop-blur flex items-center justify-center relative shadow-lg active:scale-90 transition-transform"
+            title="Ver mis fotos y previsualizar"
+            aria-label="Ver mis fotos y previsualizar"
+          >
+            {lastPhotoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={lastPhotoUrl}
+                alt="Última foto"
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <Images size={22} className="text-gold-soft" />
+            )}
+            {photoCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-gold-warm text-forest-deep font-sans font-bold text-[10px] w-5 h-5 rounded-full flex items-center justify-center shadow-md">
+                {photoCount}
+              </span>
+            )}
+          </button>
+
+          {/* Shutter Button */}
+          <button
+            onClick={takePhoto}
+            disabled={photoCount >= MAX_PHOTOS || capturing}
+            className={`w-24 h-24 rounded-full border-4 flex items-center justify-center transition-all shadow-xl ${
+              photoCount >= MAX_PHOTOS
+                ? "border-forest-deep/50 bg-forest-deep/30 opacity-50"
+                : "border-gold-warm bg-white/10 active:scale-95 shadow-[0_0_20px_rgba(216,182,90,0.4)]"
             }`}
-          />
-        </button>
+            aria-label="Tomar fotografía"
+          >
+            <div
+              className={`w-20 h-20 rounded-full transition-colors ${
+                photoCount >= MAX_PHOTOS ? "bg-forest-deep/50" : "bg-cream"
+              }`}
+            />
+          </button>
+
+          {/* Switch Camera */}
+          <button
+            onClick={handleToggleCamera}
+            disabled={loading}
+            className="w-14 h-14 rounded-2xl border border-gold-soft/30 bg-forest-deep/80 backdrop-blur flex items-center justify-center text-cream shadow-lg active:scale-90 transition-transform disabled:opacity-40"
+            title="Cambiar cámara"
+            aria-label="Cambiar cámara"
+          >
+            <SwitchCamera size={22} />
+          </button>
+        </div>
       </div>
 
       {/* Rollo Terminado overlay */}

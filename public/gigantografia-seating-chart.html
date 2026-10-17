@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gigantografía Seating Chart & QR - 15 Años Nikolee Valeska</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;800&family=Great+Vibes&family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --forest-dark: #123B2A;
+      --forest-medium: #1C4D38;
+      --gold-primary: #C5A059;
+      --gold-light: #E7D39F;
+      --gold-soft: #D8B65A;
+      --cream-bg: #F7F9F7;
+      --text-dark: #1A3026;
+      --text-muted: #4B6356;
+      --rose-soft: #E2B6B6;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: #E2E8F0;
+      font-family: 'Montserrat', sans-serif;
+      color: var(--text-dark);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+
+    /* Barra de herramientas para imprimir / descargar */
+    .toolbar {
+      background: #FFFFFF;
+      padding: 15px 25px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      margin-bottom: 25px;
+      display: flex;
+      gap: 15px;
+      align-items: center;
+      max-width: 900px;
+      width: 100%;
+      justify-content: space-between;
+    }
+
+    .toolbar-info {
+      font-size: 14px;
+      color: #334155;
+    }
+
+    .toolbar-info strong {
+      color: var(--forest-dark);
+    }
+
+    .btn-print {
+      background: var(--forest-dark);
+      color: #FFF;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 15px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: background 0.2s;
+    }
+
+    .btn-print:hover {
+      background: var(--forest-medium);
+    }
+
+    /* Lienzo Gigantografía vertical (proporción óptima 80x120 cm o 90x140 cm) */
+    .poster-canvas {
+      width: 900px;
+      min-height: 1400px;
+      background: #FFFFFF;
+      background-image: 
+        radial-gradient(circle at 10% 10%, rgba(226, 182, 182, 0.15) 0%, transparent 40%),
+        radial-gradient(circle at 90% 90%, rgba(28, 77, 56, 0.08) 0%, transparent 45%);
+      position: relative;
+      padding: 45px 50px 40px;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      border: 1px solid #CBD5E1;
+      overflow: hidden;
+    }
+
+    /* Borde interior dorado ornamental */
+    .inner-border {
+      position: absolute;
+      top: 18px;
+      left: 18px;
+      right: 18px;
+      bottom: 18px;
+      border: 2px solid var(--gold-soft);
+      pointer-events: none;
+      border-radius: 8px;
+    }
+
+    .inner-border-thin {
+      position: absolute;
+      top: 24px;
+      left: 24px;
+      right: 24px;
+      bottom: 24px;
+      border: 1px solid rgba(197, 160, 89, 0.4);
+      pointer-events: none;
+      border-radius: 4px;
+    }
+
+    /* Encabezado */
+    .header {
+      text-align: center;
+      position: relative;
+      z-index: 2;
+      margin-bottom: 25px;
+    }
+
+    .header-sub {
+      font-family: 'Great Vibes', cursive;
+      font-size: 38px;
+      color: var(--gold-primary);
+      margin-bottom: 2px;
+    }
+
+    .header-title {
+      font-family: 'Cinzel', serif;
+      font-size: 42px;
+      letter-spacing: 4px;
+      font-weight: 800;
+      color: var(--forest-dark);
+      text-transform: uppercase;
+      line-height: 1.1;
+    }
+
+    .header-desc {
+      font-size: 14px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-top: 8px;
+      font-weight: 600;
+    }
+
+    .divider {
+      width: 140px;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, var(--gold-primary), transparent);
+      margin: 10px auto;
+    }
+
+    /* SECCIÓN QR HERO INTERACTIVO */
+    .qr-banner-card {
+      background: linear-gradient(135deg, #123B2A 0%, #1A4D37 100%);
+      border: 2px solid var(--gold-soft);
+      border-radius: 20px;
+      padding: 22px 28px;
+      display: flex;
+      align-items: center;
+      gap: 28px;
+      color: #FFFFFF;
+      box-shadow: 0 10px 25px rgba(18, 59, 42, 0.25);
+      position: relative;
+      z-index: 2;
+      margin-bottom: 30px;
+    }
+
+    .qr-box {
+      background: #FFFFFF;
+      padding: 12px;
+      border-radius: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+      flex-shrink: 0;
+    }
+
+    .qr-box img, .qr-box svg {
+      width: 170px;
+      height: 170px;
+      display: block;
+    }
+
+    .qr-box-caption {
+      color: var(--forest-dark);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-top: 6px;
+    }
+
+    .qr-instructions {
+      flex: 1;
+    }
+
+    .qr-instructions h3 {
+      font-family: 'Cinzel', serif;
+      font-size: 23px;
+      color: var(--gold-light);
+      margin-bottom: 6px;
+      letter-spacing: 1px;
+    }
+
+    .qr-instructions p.lead {
+      font-size: 13.5px;
+      color: #E2E8F0;
+      margin-bottom: 12px;
+      line-height: 1.4;
+    }
+
+    .steps-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .step-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      background: rgba(255, 255, 255, 0.08);
+      padding: 7px 12px;
+      border-radius: 8px;
+      border-left: 3px solid var(--gold-soft);
+    }
+
+    .step-num {
+      background: var(--gold-soft);
+      color: var(--forest-dark);
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 11px;
+      flex-shrink: 0;
+    }
+
+    .url-badge {
+      display: inline-block;
+      margin-top: 10px;
+      font-size: 11.5px;
+      color: var(--gold-light);
+      letter-spacing: 0.5px;
+      font-weight: 600;
+      opacity: 0.85;
+    }
+
+    /* SEATING CHART / DISTRIBUCIÓN DE MESAS */
+    .seating-title-wrap {
+      text-align: center;
+      margin-bottom: 18px;
+    }
+
+    .seating-title {
+      font-family: 'Great Vibes', cursive;
+      font-size: 48px;
+      color: var(--forest-dark);
+      line-height: 1;
+      display: inline-block;
+    }
+
+    .seating-subtitle {
+      font-family: 'Cinzel', serif;
+      font-size: 12px;
+      letter-spacing: 3px;
+      color: var(--gold-primary);
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    /* Cuadrícula de mesas */
+    .tables-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .table-card {
+      background: rgba(247, 249, 247, 0.7);
+      border: 1px solid rgba(197, 160, 89, 0.4);
+      border-radius: 12px;
+      padding: 12px 10px;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(18, 59, 42, 0.04);
+    }
+
+    /* Mesa Principal destacada */
+    .table-card.main-table {
+      grid-column: span 1;
+      grid-row: span 2;
+      background: #FFFFFF;
+      border: 2px solid var(--forest-dark);
+      box-shadow: 0 4px 14px rgba(18, 59, 42, 0.12);
+      position: relative;
+    }
+
+    .main-table::before {
+      content: '★ MESA DE HONOR ★';
+      display: block;
+      font-size: 8.5px;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      color: var(--gold-primary);
+      margin-bottom: 2px;
+    }
+
+    .table-header {
+      font-family: 'Cinzel', serif;
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--forest-dark);
+      letter-spacing: 1.5px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--gold-light);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+
+    .main-table .table-header {
+      font-size: 14px;
+      color: var(--forest-dark);
+      border-bottom: 2px solid var(--gold-soft);
+    }
+
+    .guest-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .guest-list li {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-dark);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      line-height: 1.25;
+    }
+
+    .main-table .guest-list li {
+      font-size: 10.5px;
+      font-weight: 700;
+      color: var(--forest-dark);
+    }
+
+    .main-table .guest-list li:first-child {
+      color: #9E2A2B;
+      font-weight: 800;
+      font-size: 12px;
+      letter-spacing: 1px;
+      padding: 2px 0;
+      border-radius: 4px;
+      background: rgba(197, 160, 89, 0.15);
+      margin-bottom: 2px;
+    }
+
+    /* Pie de página */
+    .footer {
+      text-align: center;
+      padding-top: 15px;
+      margin-top: 20px;
+      border-top: 1px solid rgba(197, 160, 89, 0.3);
+      position: relative;
+      z-index: 2;
+    }
+
+    .footer p {
+      font-size: 12px;
+      color: var(--text-muted);
+      letter-spacing: 2px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .footer-quote {
+      font-family: 'Great Vibes', cursive;
+      font-size: 26px;
+      color: var(--gold-primary);
+      margin-top: 4px;
+    }
+
+    /* Decoración de esquinas estilo botánico acuarela */
+    .floral-accent {
+      position: absolute;
+      pointer-events: none;
+      opacity: 0.85;
+      z-index: 1;
+    }
+
+    .floral-top-right {
+      top: -20px;
+      right: -20px;
+      width: 220px;
+    }
+
+    .floral-bottom-left {
+      bottom: -20px;
+      left: -20px;
+      width: 220px;
+    }
+
+    /* MODO IMPRESIÓN (Para guardar en PDF con Ctrl+P) */
+    @media print {
+      body {
+        background: transparent;
+        padding: 0;
+      }
+
+      .toolbar {
+        display: none !important;
+      }
+
+      .poster-canvas {
+        box-shadow: none;
+        border: none;
+        width: 100%;
+        min-height: 100vh;
+        page-break-after: avoid;
+        page-break-inside: avoid;
+      }
+
+      @page {
+        size: auto;
+        margin: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- BARRA DE ACCIÓN PARA EL USUARIO -->
+  <div class="toolbar">
+    <div class="toolbar-info">
+      <strong>Gigantografía Lista para Imprimir:</strong> Seating Chart + QR de Cámara Digital.<br>
+      Haz clic en <strong>"Imprimir / Guardar en PDF"</strong> y elige tamaño <em>A3, Tabloide o Personalizado</em> para llevar a la imprenta.
+    </div>
+    <button class="btn-print" onclick="window.print()">
+      🖨️ IMPRIMIR / GUARDAR EN PDF
+    </button>
+  </div>
+
+  <!-- LIENZO DE LA GIGANTOGRAFÍA -->
+  <div class="poster-canvas">
+    
+    <!-- Bordes ornamentales dorados -->
+    <div class="inner-border"></div>
+    <div class="inner-border-thin"></div>
+
+    <!-- 1. ENCABEZADO -->
+    <header class="header">
+      <div class="header-sub">Bienvenidos a mis 15 Años</div>
+      <h1 class="header-title">Nikolee Valeska</h1>
+      <div class="divider"></div>
+      <div class="header-desc">Encuentra tu lugar y comparte tus mejores momentos</div>
+    </header>
+
+    <!-- 2. BANNER HERO: CÓDIGO QR + CÁMARA DESECHABLE -->
+    <section class="qr-banner-card">
+      <div class="qr-box">
+        <!-- Código QR vectorial en alta resolución inline -->
+        <svg height="170" width="170" viewBox="0 0 41 41" role="img" style="border-radius: 8px;">
+          <path fill="#FFFFFF" d="M0,0 h41v41H0z" shape-rendering="crispEdges"></path>
+          <path fill="#123B2A" d="M4 4h7v1H4zM12 4h1v1H12zM20 4h4v1H20zM26 4h3v1H26zM30,4 h7v1H30zM4 5h1v1H4zM10 5h1v1H10zM12 5h1v1H12zM14 5h1v1H14zM16 5h3v1H16zM21 5h2v1H21zM26 5h2v1H26zM30 5h1v1H30zM36,5 h1v1H36zM4 6h1v1H4zM6 6h3v1H6zM10 6h1v1H10zM13 6h1v1H13zM16 6h4v1H16zM22 6h1v1H22zM28 6h1v1H28zM30 6h1v1H30zM32 6h3v1H32zM36,6 h1v1H36zM4 7h1v1H4zM6 7h3v1H6zM10 7h1v1H10zM12 7h1v1H12zM14 7h4v1H14zM21 7h4v1H21zM26 7h1v1H26zM28 7h1v1H28zM30 7h1v1H30zM32 7h3v1H32zM36,7 h1v1H36zM4 8h1v1H4zM6 8h3v1H6zM10 8h1v1H10zM12 8h1v1H12zM14 8h1v1H14zM16 8h1v1H16zM19 8h1v1H19zM23 8h1v1H23zM27 8h1v1H27zM30 8h1v1H30zM32 8h3v1H32zM36,8 h1v1H36zM4 9h1v1H4zM10 9h1v1H10zM12 9h1v1H12zM15 9h1v1H15zM17 9h3v1H17zM26 9h1v1H26zM30 9h1v1H30zM36,9 h1v1H36zM4 10h7v1H4zM12 10h1v1H12zM14 10h1v1H14zM16 10h1v1H16zM18 10h1v1H18zM20 10h1v1H20zM22 10h1v1H22zM24 10h1v1H24zM26 10h1v1H26zM28 10h1v1H28zM30,10 h7v1H30zM13 11h2v1H13zM18 11h4v1H18zM23 11h5v1H23zM7 12h1v1H7zM10 12h1v1H10zM13 12h7v1H13zM21 12h3v1H21zM25 12h1v1H25zM27 12h1v1H27zM31 12h3v1H31zM35,12 h2v1H35zM6 13h2v1H6zM9 13h1v1H9zM12 13h1v1H12zM14 13h1v1H14zM18 13h3v1H18zM24 13h2v1H24zM28 13h1v1H28zM30 13h1v1H30zM33 13h2v1H33zM36,13 h1v1H36zM4 14h1v1H4zM6 14h1v1H6zM8 14h1v1H8zM10 14h1v1H10zM12 14h1v1H12zM15 14h1v1H15zM17 14h2v1H17zM21 14h2v1H21zM28 14h3v1H28zM33 14h1v1H33zM35,14 h2v1H35zM9 15h1v1H9zM13 15h3v1H13zM17 15h4v1H17zM22 15h1v1H22zM25 15h1v1H25zM27 15h2v1H27zM30 15h1v1H30zM33 15h1v1H33zM36,15 h1v1H36zM8 16h3v1H8zM12 16h2v1H12zM15 16h1v1H15zM17 16h4v1H17zM22 16h6v1H22zM30 16h1v1H30zM36,16 h1v1H36zM7 17h2v1H7zM12 17h1v1H12zM16 17h1v1H16zM19 17h1v1H19zM21 17h1v1H21zM24 17h1v1H24zM26 17h1v1H26zM28 17h1v1H28zM30 17h4v1H30zM36,17 h1v1H36zM5 18h6v1H5zM12 18h2v1H12zM19 18h3v1H19zM23 18h1v1H23zM25 18h1v1H25zM27 18h1v1H27zM29 18h1v1H29zM32 18h1v1H32zM35 18h1v1H35zM4 19h1v1H4zM6 19h4v1H6zM11 19h2v1H11zM14 19h1v1H14zM20 19h2v1H20zM23 19h4v1H23zM28 19h1v1H28zM32 19h1v1H32zM35,19 h2v1H35zM6 20h2v1H6zM9 20h2v1H9zM12 20h1v1H12zM14 20h1v1H14zM16 20h1v1H16zM18 20h8v1H18zM27 20h1v1H27zM30 20h1v1H30zM32 20h1v1H32zM35,20 h2v1H35zM4 21h1v1H4zM6 21h1v1H6zM8 21h2v1H8zM12 21h1v1H12zM15 21h2v1H15zM18 21h1v1H18zM24 21h1v1H24zM27 21h1v1H27zM29 21h1v1H29zM34 21h2v1H34zM5 22h1v1H5zM7 22h2v1H7zM10 22h4v1H10zM15 22h1v1H15zM17 22h1v1H17zM19 22h1v1H19zM21 22h1v1H21zM23 22h1v1H23zM25 22h1v1H25zM29 22h1v1H29zM32 22h1v1H32zM34,22 h3v1H34zM6 23h2v1H6zM12 23h1v1H12zM14 23h2v1H14zM17 23h1v1H17zM19 23h4v1H19zM25 23h2v1H25zM30 23h1v1H30zM36,23 h1v1H36zM5 24h3v1H5zM9 24h2v1H9zM12 24h2v1H12zM15 24h1v1H15zM19 24h1v1H19zM22 24h4v1H22zM27 24h1v1H27zM29 24h1v1H29zM8 25h2v1H8zM11 25h1v1H11zM13 25h2v1H13zM16 25h1v1H16zM19 25h3v1H19zM23 25h1v1H23zM25 25h1v1H25zM28 25h3v1H28zM35,25 h2v1H35zM4 26h3v1H4zM10 26h2v1H10zM14 26h2v1H14zM18 26h2v1H18zM22 26h1v1H22zM26 26h1v1H26zM29 26h3v1H29zM33 26h2v1H33zM36,26 h1v1H36zM5 27h1v1H5zM7 27h1v1H7zM9 27h1v1H9zM11 27h1v1H11zM13 27h1v1H13zM15 27h1v1H15zM18 27h9v1H18zM29 27h2v1H29zM32 27h1v1H32zM36,27 h1v1H36zM4 28h1v1H4zM7 28h2v1H7zM10 28h2v1H10zM15 28h6v1H15zM22 28h1v1H22zM25 28h1v1H25zM28 28h5v1H28zM12 29h2v1H12zM16 29h2v1H16zM20 29h2v1H20zM27 29h2v1H27zM32 29h1v1H32zM34,29 h3v1H34zM4 30h7v1H4zM13 30h9v1H13zM23 30h1v1H23zM25 30h1v1H25zM28 30h1v1H28zM30 30h1v1H30zM32 30h1v1H32zM4 31h1v1H4zM10 31h1v1H10zM13 31h3v1H13zM19 31h1v1H19zM21 31h3v1H21zM25 31h4v1H25zM32 31h1v1H32zM36,31 h1v1H36zM4 32h1v1H4zM6 32h3v1H6zM10 32h1v1H10zM13 32h6v1H13zM20 32h2v1H20zM23 32h2v1H23zM28 32h5v1H28zM4 33h1v1H4zM6 33h3v1H6zM10 33h1v1H10zM12 33h1v1H12zM14 33h1v1H14zM17 33h1v1H17zM22 33h1v1H22zM25 33h1v1H25zM27 33h1v1H27zM30 33h1v1H30zM32 33h2v1H32zM35 33h1v1H35zM4 34h1v1H4zM6 34h3v1H6zM10 34h1v1H10zM13 34h1v1H13zM15 34h2v1H15zM18 34h2v1H18zM21 34h1v1H21zM24 34h2v1H24zM27 34h3v1H27zM31 34h4v1H31zM36,34 h1v1H36zM4 35h1v1H4zM10 35h1v1H10zM14 35h1v1H14zM17 35h2v1H17zM21 35h1v1H21zM23 35h1v1H23zM25 35h8v1H25zM4 36h7v1H4zM13 36h2v1H13zM17 36h2v1H17zM20 36h3v1H20zM25 36h1v1H25zM28 36h2v1H28zM31 36h3v1H31zM35 36h1v1H35z" shape-rendering="crispEdges"></path>
+        </svg>
+        <span class="qr-box-caption">Cámara Digital</span>
+      </div>
+
+      <div class="qr-instructions">
+        <h3>¡SÉ PARTE DE MIS RECUERDOS!</h3>
+        <p class="lead">
+          Hoy tú eres nuestro fotógrafo oficial. Ayúdanos a capturar cada instante especial de esta noche inolvidable.
+        </p>
+
+        <div class="steps-list">
+          <div class="step-item">
+            <span class="step-num">1</span>
+            <span><strong>Escanea el código QR</strong> con la cámara de tu teléfono móvil.</span>
+          </div>
+          <div class="step-item">
+            <span class="step-num">2</span>
+            <span><strong>Mira el vídeo</strong> especial de bienvenida de Nikolee.</span>
+          </div>
+          <div class="step-item">
+            <span class="step-num">3</span>
+            <span><strong>Ingresa tu nombre</strong> y toma hasta <strong>24 fotos únicas</strong>.</span>
+          </div>
+        </div>
+
+        <div class="url-badge">
+          🌐 https://15-a-osnikolee.vercel.app/
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. SEATING CHART: DISTRIBUCIÓN DE MESAS -->
+    <section>
+      <div class="seating-title-wrap">
+        <h2 class="seating-title">Mesas</h2>
+        <div class="seating-subtitle">Distribución de Invitados</div>
+      </div>
+
+      <div class="tables-grid">
+        
+        <!-- MESA PRINCIPAL (Columna 1, ocupa 2 filas) -->
+        <div class="table-card main-table">
+          <div class="table-header">Mesa Nikolee</div>
+          <ul class="guest-list">
+            <li>NIKOLEE 👑</li>
+            <li>BRENDA</li>
+            <li>VERONICA</li>
+            <li>VALERY</li>
+            <li>ANTONELLA</li>
+            <li>FABIO</li>
+            <li>JULY</li>
+            <li>LORY</li>
+            <li>JOSE</li>
+            <li>SANDRA</li>
+            <li>HARDY</li>
+            <li>MARTA</li>
+            <li>CARMEN</li>
+            <li>ALVARO</li>
+            <li>ANDREA</li>
+            <li>VICENTE</li>
+            <li>AINARA</li>
+            <li>EMILIANO</li>
+          </ul>
+        </div>
+
+        <!-- MESA 1 -->
+        <div class="table-card">
+          <div class="table-header">Mesa 1</div>
+          <ul class="guest-list">
+            <li>RUBEN</li>
+            <li>EDDY</li>
+            <li>ESPERANZA</li>
+            <li>EMILIO</li>
+            <li>LIBIA</li>
+            <li>CELIA</li>
+            <li>ELISA</li>
+            <li>JAIDI</li>
+          </ul>
+        </div>
+
+        <!-- MESA 2 -->
+        <div class="table-card">
+          <div class="table-header">Mesa 2</div>
+          <ul class="guest-list">
+            <li>ORLANDO</li>
+            <li>TRINI</li>
+            <li>KELLY</li>
+            <li>PEPE</li>
+            <li>VILMA</li>
+            <li>JOSE A.</li>
+            <li>JUDITH</li>
+            <li>ELIZABETH</li>
+          </ul>
+        </div>
+
+        <!-- MESA 5 -->
+        <div class="table-card">
+          <div class="table-header">Mesa 5</div>
+          <ul class="guest-list">
+            <li>ANGELICA</li>
+            <li>JUAN M.</li>
+            <li>KATHE</li>
+            <li>ABRAHAM</li>
+            <li>KHISTOPHER</li>
+            <li>NAHUM</li>
+            <li>ORLANDITO</li>
+            <li>GLORI</li>
+            <li>MARIELIS</li>
+          </ul>
+        </div>
+
+        <!-- MESA 3 -->
+        <div class="table-card">
+          <div class="table-header">Mesa 3</div>
+          <ul class="guest-list">
+            <li>JULIO</li>
+            <li>ANDREA</li>
+            <li>MAJIDA</li>
+            <li>MARIOTSI</li>
+            <li>DOMINGO</li>
+            <li>NEIKAR</li>
+            <li>LUIS</li>
+            <li>VICMARYS</li>
+            <li>GORDO</li>
+          </ul>
+        </div>
+
+        <!-- MESA 4 -->
+        <div class="table-card">
+          <div class="table-header">Mesa 4</div>
+          <ul class="guest-list">
+            <li>KARLA</li>
+            <li>JORGE</li>
+            <li>CARMEN</li>
+            <li>OSCAR</li>
+            <li>ORLE</li>
+            <li>ESKARLET</li>
+            <li>JEAN C.</li>
+            <li>ANGI</li>
+          </ul>
+        </div>
+
+        <!-- MESA 6 -->
+        <div class="table-card">
+          <div class="table-header">Mesa 6</div>
+          <ul class="guest-list">
+            <li>NORA</li>
+            <li>JOSEF</li>
+            <li>LIAM</li>
+            <li>LEIDY</li>
+            <li>YAYA</li>
+            <li>MARIANA</li>
+            <li>JUAN</li>
+          </ul>
+        </div>
+
+        <!-- MESA 7 (Ocupa la columna restante abajo) -->
+        <div class="table-card" style="grid-column: 4; grid-row: 2;">
+          <div class="table-header">Mesa 7</div>
+          <ul class="guest-list">
+            <li>YARA</li>
+            <li>KARLO</li>
+            <li>SABRINA</li>
+            <li>JOSE</li>
+            <li>GERALDINE</li>
+            <li>MANOLIN</li>
+            <li>RUBI</li>
+            <li>EL TOCHE</li>
+          </ul>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 4. PIE DE PÁGINA -->
+    <footer class="footer">
+      <p>15 Años Nikolee Valeska &bull; 17 de Octubre de 2026</p>
+      <div class="footer-quote">Gracias por acompañarme en esta noche mágica</div>
+    </footer>
+
+  </div>
+
+</body>
+</html>
