@@ -13,49 +13,23 @@ function isAdminAuthenticated(): boolean {
   return verifyAdminToken(token);
 }
 
-/** Ensures bucket exists with correct MIME types. Returns null on success or error stage string. */
-async function ensureBucket(): Promise<string | null> {
-  const { data: buckets, error: listError } = await supabaseAdmin.storage.listBuckets();
+/** 
+ * Verifies we can actually access the known bucket by listing at most 1 item.
+ * Avoids listBuckets() which requires special admin permissions that can fail in Vercel.
+ * Returns null on success, or an error stage string on failure.
+ */
+async function verifyBucketAccess(): Promise<string | null> {
+  const { error } = await supabaseAdmin.storage
+    .from(BUCKET_NAME)
+    .list(`${EVENT_ID}`, { limit: 1 });
 
-  if (listError) {
-    console.error('[LIST_BUCKETS] FAILED:', {
-      message: listError.message,
-      name: listError.name,
-      statusCode: (listError as any).statusCode ?? (listError as any).status ?? 'unknown',
+  if (error) {
+    console.error('[VERIFY_BUCKET_ACCESS] FAILED:', {
+      message: error.message,
+      name: error.name,
+      statusCode: (error as any).statusCode ?? (error as any).status ?? 'unknown',
     });
-    return 'LIST_BUCKETS';
-  }
-
-  const exists = (buckets ?? []).some(b => b.name === BUCKET_NAME);
-
-  if (!exists) {
-    const { error: createError } = await supabaseAdmin.storage.createBucket(BUCKET_NAME, {
-      public: true,
-      allowedMimeTypes: ['video/mp4', 'video/webm', 'video/quicktime', 'application/json'],
-    });
-    if (createError) {
-      console.error('[CREATE_BUCKET] FAILED:', {
-        message: createError.message,
-        name: createError.name,
-        statusCode: (createError as any).statusCode ?? (createError as any).status ?? 'unknown',
-      });
-      return 'CREATE_BUCKET';
-    }
-    console.log('[CREATE_BUCKET] OK');
-  } else {
-    const { error: updateError } = await supabaseAdmin.storage.updateBucket(BUCKET_NAME, {
-      public: true,
-      allowedMimeTypes: ['video/mp4', 'video/webm', 'video/quicktime', 'application/json'],
-    });
-    if (updateError) {
-      console.error('[UPDATE_BUCKET] FAILED:', {
-        message: updateError.message,
-        name: updateError.name,
-        statusCode: (updateError as any).statusCode ?? (updateError as any).status ?? 'unknown',
-      });
-      return 'UPDATE_BUCKET';
-    }
-    console.log('[UPDATE_BUCKET] OK');
+    return 'BUCKET_ACCESS';
   }
 
   return null;
@@ -79,7 +53,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   if (!isAdminAuthenticated()) return NextResponse.json({ message: 'No autorizado' }, { status: 401 });
 
-  console.log('[admin/welcome-video] Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'MISSING');
+  console.log('[admin/welcome-video] Supabase URL prefix:', (process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'MISSING').slice(0, 30));
 
   try {
     const formData = await req.formData();
@@ -91,10 +65,11 @@ export async function POST(req: NextRequest) {
     if (action === 'get-upload-url') {
       const ext = (formData.get('ext') as string) || 'mp4';
 
-      const bucketError = await ensureBucket();
-      if (bucketError) {
+      // Verify bucket access directly — no listBuckets() needed
+      const accessError = await verifyBucketAccess();
+      if (accessError) {
         return NextResponse.json(
-          { message: `Error de almacenamiento (${bucketError})` },
+          { message: `Error de acceso al almacenamiento (${accessError}). Comprueba que el bucket '${BUCKET_NAME}' existe y que las credenciales del servidor tienen permisos suficientes.` },
           { status: 500 }
         );
       }
